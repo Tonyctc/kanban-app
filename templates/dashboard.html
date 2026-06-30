@@ -2,6 +2,36 @@
 {% block title %}Meus Quadros - Kanban App{% endblock %}
 
 {% block content %}
+{% set plan_limits = namespace(max_quadros=20) %}
+{% if current_user.plano == 'gratuito' %}{% set plan_limits.max_quadros = 3 %}{% endif %}
+{% if current_user.plano == 'comum' %}{% set plan_limits.max_quadros = 20 %}{% endif %}
+{% if current_user.plano == 'corporativo' %}{% set plan_limits.max_quadros = 50 %}{% endif %}
+
+<!-- Upgrade Banner for Free Users -->
+{% if current_user and current_user.plano == 'gratuito' and quadros|length >= 2 %}
+<div class="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 border border-yellow-200 dark:border-yellow-700 rounded-xl p-4">
+    <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-yellow-100 dark:bg-yellow-900/50 flex items-center justify-center">
+                <i class="fas fa-crown text-yellow-600 dark:text-yellow-400"></i>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-900 dark:text-white">
+                    Você está usando {{ quadros|length }} de {{ plan_limits.max_quadros }} quadros do plano Gratuito
+                </p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">
+                    Faça upgrade para o Plano Comum (R$ 6,99/mês) e tenha até 20 quadros!
+                </p>
+            </div>
+        </div>
+        <a href="{{ url_for('planos') }}"
+           class="flex-shrink-0 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors">
+            <i class="fas fa-arrow-right mr-1"></i> Ver Planos
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <div class="mb-6">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>

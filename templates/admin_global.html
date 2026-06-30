@@ -120,6 +120,7 @@
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nome</th>
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Perfil</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plano</th>
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Corp</th>
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
                     <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ações</th>
@@ -138,6 +139,21 @@
                             {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300{% endif %}">
                             {{ {'admin': 'Admin', 'corporativo': 'Corp', 'comum': 'Comum'}[u.perfil] or u.perfil }}
                         </span>
+                    </td>
+                    <td class="px-5 py-3">
+                        <span class="inline-flex px-2 py-0.5 text-xs rounded-full
+                            {% if u.plano == 'corporativo' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300
+                            {% elif u.plano == 'comum' %}bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300
+                            {% else %}bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400{% endif %}">
+                            {{ u.plano or 'gratuito' }}
+                        </span>
+                        {% if u.id|string != '0' %}
+                        <button onclick="alterarPlano('{{ u.id }}', '{{ u.plano or 'gratuito' }}')"
+                                class="ml-1 text-xs text-indigo-400 hover:text-indigo-600 transition-colors"
+                                title="Alterar plano">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        {% endif %}
                     </td>
                     <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">{{ u.id_corporacao or '—' }}</td>
                     <td class="px-5 py-3">
@@ -346,6 +362,60 @@
     </div>
 </div>
 
+<!-- Modal Alterar Plano -->
+<div id="modal-alterar-plano" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-crown text-yellow-500 mr-2"></i>Alterar Plano
+            </h2>
+            <button onclick="document.getElementById('modal-alterar-plano').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="form-alterar-plano" method="POST" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecione o plano</label>
+                <div class="space-y-2">
+                    <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <input type="radio" name="plano" value="gratuito" class="mr-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Gratuito</span>
+                            <p class="text-xs text-gray-500">3 quadros, 20 cartões</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <input type="radio" name="plano" value="comum" class="mr-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Comum</span>
+                            <p class="text-xs text-gray-500">20 quadros, 200 cartões</p>
+                        </div>
+                    </label>
+                    <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                        <input type="radio" name="plano" value="corporativo" class="mr-3">
+                        <div>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Corporativo</span>
+                            <p class="text-xs text-gray-500">50 quadros, gestão corporativa</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-alterar-plano').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
+                    <i class="fas fa-check mr-1"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
     function editarUsuario(id, nome, email, perfil, corp) {
         const form = document.getElementById('form-editar-usuario');
@@ -355,6 +425,15 @@
         document.getElementById('edit-user-perfil').value = perfil;
         document.getElementById('edit-user-corp').value = corp;
         document.getElementById('modal-editar-usuario').classList.remove('hidden');
+    }
+
+    function alterarPlano(id, planoAtual) {
+        const form = document.getElementById('form-alterar-plano');
+        form.action = `/admin/global/usuarios/${id}/plano`;
+        document.querySelectorAll('#form-alterar-plano input[name="plano"]').forEach(function(el) {
+            el.checked = el.value === planoAtual;
+        });
+        document.getElementById('modal-alterar-plano').classList.remove('hidden');
     }
 </script>
 {% endblock %}

@@ -33,8 +33,145 @@ from permissions import (
 app = Flask(__name__, template_folder='templates')
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 DATA_DIR = Config.DATA_DIR
+
+
+# ─── Security Headers Middleware ──────────────────────────────────
+
+@app.after_request
+def add_security_headers(response):
+    """Adiciona headers de segurança em todas as respostas."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com 'unsafe-inline'; "
+        "style-src 'self' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com 'unsafe-inline'; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; "
+        "img-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'"
+    )
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
+    response.headers['Server'] = 'Kanban-App'
+    return response
+
+
+# ─── Rate Limiting (in-memory) ──────────────────────────────────
+
+import time
+from collections import defaultdict
+from functools import wraps
+
+_rate_limits = defaultdict(list)
+
+def rate_limit(max_requests: int = 60, window_seconds: int = 60):
+    """Rate limiter simples por IP. Padrão: 60 req/min."""
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            ip = request.remote_addr or 'unknown'
+            now = time.time()
+            window_start = now - window_seconds
+            _rate_limits[ip] = [t for t in _rate_limits[ip] if t > window_start]
+            if len(_rate_limits[ip]) >= max_requests:
+                abort(429, description="Muitas requisições. Aguarde e tente novamente.")
+            _rate_limits[ip].append(now)
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
+# ─── Disk Quota & Limits ────────────────────────────────────────
+
+DISK_QUOTA_BYTES = 50 * 1024 * 1024  # 50 MB por usuário
+MAX_BOARDS_PER_USER = 20
+MAX_CARDS_PER_BOARD = 200
+MAX_COLUMNS_PER_BOARD = 10
+MAX_CARD_TITLE_LENGTH = 200
+MAX_CARD_DESC_LENGTH = 2000
+MAX_BOARD_TITLE_LENGTH = 100
+MAX_BOARD_DESC_LENGTH = 500
+
+def check_disk_quota(data_dir: str, user_id: int) -> bool:
+    from okf_manager import get_espaco_disco_usuario
+    usage = get_espaco_disco_usuario(data_dir, user_id)
+    return usage['bytes'] < DISK_QUOTA_BYTES
+
+def enforce_limits(f):
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        user_id = session.get('user_id')
+        if user_id is not None and user_id != 0:
+            if not check_disk_quota(DATA_DIR, user_id):
+                flash('Limite de armazenamento atingido (50 MB). Exclua dados antigos.', 'error')
+                return redirect(url_for('dashboard'))
+        return f(*args, **kwargs)
+    return wrapped
+
+
+# ─── Plan Limits ────────────────────────────────────────────
+
+PLANO_LIMITS = {
+    'gratuito': {'max_quadros': 3, 'max_cartoes': 20},
+    'comum': {'max_quadros': 20, 'max_cartoes': 200},
+    'corporativo': {'max_quadros': 50, 'max_cartoes': 200},
+}
+
+def get_user_plan(user_id: int) -> str:
+    """Retorna o plano do usuário: gratuito, comum ou corporativo."""
+    user = get_usuario_por_id(DATA_DIR, user_id)
+    if not user:
+        return 'gratuito'
+    return user.get('plano', 'gratuito')
+
+def get_plan_limits(user_id: int) -> dict:
+    """Retorna os limites do plano do usuário."""
+    plan = get_user_plan(user_id)
+    return PLANO_LIMITS.get(plan, PLANO_LIMITS['gratuito'])
+
+def check_plan_limits(f):
+    """Decorator: verifica limites do plano antes de criar quadros/cartões."""
+    @wraps(f)
+    def wrapped(*args, **kwargs):
+        user_id = session.get('user_id')
+        if user_id is None:
+            return f(*args, **kwargs)
+        plan = get_user_plan(user_id)
+        limits = get_plan_limits(user_id)
+
+        if request.path.startswith('/dashboard/criar'):
+            from okf_manager import listar_quadros
+            quadros = listar_quadros(DATA_DIR, user_id)
+            if len(quadros) >= limits['max_quadros']:
+                flash(
+                    f'Limite do plano {plan}: máximo de {limits["max_quadros"]} quadros. '
+                    f'<a href="{url_for("planos")}" class="underline">Faça upgrade</a>',
+                    'error'
+                )
+                return redirect(url_for('dashboard'))
+
+        return f(*args, **kwargs)
+    return wrapped
+
+
+# ─── Input Sanitization ─────────────────────────────────────────
+
+import re
+
+def sanitize_board_name(name: str) -> str:
+    """Remove chars perigosos de nomes de quadro (path traversal)."""
+    if not name:
+        return ''
+    if name.startswith('__') or name in ('config', 'settings', '.env', '.git'):
+        return ''
+    sanitized = re.sub(r'[^a-zA-Z0-9_-]', '', name.strip())
+    return sanitized[:64]
 
 
 # ─── Contexto global do template ────────────────────────────────────
@@ -58,6 +195,7 @@ def inject_global_context():
 # ═══════════════════════════════════════════════════════════════════
 
 @app.route('/login', methods=['GET', 'POST'])
+@rate_limit(max_requests=20, window_seconds=60)
 def login():
     """Página de login / autenticação."""
     if session.get('user_id') is not None:
@@ -381,12 +519,22 @@ def dashboard():
 
 @app.route('/dashboard/criar', methods=['POST'])
 @login_required
+@enforce_limits
+@check_plan_limits
 def dashboard_criar_quadro():
     """Cria um novo quadro Kanban."""
     user_id = session['user_id']
     nome = request.form.get('nome', '').strip()
     titulo = request.form.get('titulo', '').strip() or nome
     descricao = request.form.get('descricao', '').strip()
+
+    nome = sanitize_board_name(nome)
+    if not nome:
+        flash('Nome do quadro inválido.', 'error')
+        return redirect(url_for('dashboard'))
+
+    titulo = titulo[:MAX_BOARD_TITLE_LENGTH]
+    descricao = descricao[:MAX_BOARD_DESC_LENGTH]
 
     if not nome:
         flash('Nome do quadro é obrigatório.', 'error')
@@ -413,6 +561,11 @@ def board_view(board_name):
     """Visualiza um quadro Kanban específico.
     Suporta user_id opcional na query string para admin corporativo ver quadros da equipe.
     """
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        flash('Quadro não encontrado.', 'error')
+        return redirect(url_for('dashboard'))
+
     target_user_id = request.args.get('user_id', session['user_id'], type=int)
 
     # Validação de permissão
@@ -458,6 +611,9 @@ def board_delete(board_name):
 @login_required
 def api_get_quadro(board_name):
     """Retorna dados completos do quadro em JSON."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
     user_id = session['user_id']
     quadro = get_quadro_completo(DATA_DIR, user_id, board_name)
     if not quadro:
@@ -467,8 +623,12 @@ def api_get_quadro(board_name):
 
 @app.route('/api/quadro/<board_name>/card', methods=['POST'])
 @login_required
+@rate_limit(max_requests=30, window_seconds=60)
 def api_add_card(board_name):
     """Adiciona um novo cartão via JSON."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
     user_id = session['user_id']
     data = request.get_json()
     if not data:
@@ -476,11 +636,20 @@ def api_add_card(board_name):
 
     column_id = data.get('column_id', '')
     card_data = {
-        'titulo': data.get('titulo', 'Novo Cartão'),
-        'descricao': data.get('descricao', ''),
-        'prioridade': data.get('prioridade', 'media'),
-        'data_entrega': data.get('data_entrega', ''),
+        'titulo': (data.get('titulo', 'Novo Cartão') or '')[:MAX_CARD_TITLE_LENGTH],
+        'descricao': (data.get('descricao', '') or '')[:MAX_CARD_DESC_LENGTH],
+        'prioridade': data.get('prioridade', 'media') if data.get('prioridade') in ('alta', 'media', 'baixa') else 'media',
+        'data_entrega': (data.get('data_entrega', '') or '')[:10],
     }
+
+    # Limite de cartões por quadro (plano-based)
+    quadro = get_quadro_completo(DATA_DIR, user_id, board_name)
+    if quadro:
+        total_cards = sum(len(c['cards']) for c in quadro['colunas'])
+        plan_limits = get_plan_limits(user_id)
+        max_cards = plan_limits.get('max_cartoes', MAX_CARDS_PER_BOARD)
+        if total_cards >= max_cards:
+            return jsonify({'error': f'Limite do seu plano: máximo de {max_cards} cartões por quadro.'}), 400
 
     result = adicionar_card(DATA_DIR, user_id, board_name, column_id, card_data)
     if result:
@@ -567,6 +736,94 @@ def api_delete_column(board_name, column_id):
 
 
 # ═══════════════════════════════════════════════════════════════════
+#  PLANOS E ASSINATURAS
+# ═══════════════════════════════════════════════════════════════════
+
+from datetime import datetime
+
+@app.route('/planos')
+@login_required
+def planos():
+    """Página de planos disponíveis."""
+    user_id = session['user_id']
+    user = get_usuario_por_id(DATA_DIR, user_id)
+    return render_template('planos.html', user=user)
+
+
+@app.route('/planos/assinar', methods=['POST'])
+@login_required
+def planos_assinar():
+    """Assina um plano (simulação de pagamento)."""
+    user_id = session['user_id']
+    plano = request.form.get('plano', '')
+    tipo_pagamento = request.form.get('tipo_pagamento', 'pago')
+
+    if plano not in ('comum', 'corporativo'):
+        flash('Plano inválido.', 'error')
+        return redirect(url_for('planos'))
+
+    # Validar: corporativo só para admins corporativos
+    if plano == 'corporativo':
+        user = get_usuario_por_id(DATA_DIR, user_id)
+        if not user or user.get('perfil') != 'corporativo':
+            flash('Plano corporativo disponível apenas para administradores corporativos.', 'error')
+            return redirect(url_for('planos'))
+
+    dados = {
+        'plano': plano,
+        'assinatura_desde': datetime.now().isoformat(),
+        'assinatura_ativa': 'true',
+    }
+
+    if plano == 'comum' and tipo_pagamento == 'propaganda':
+        dados['aceita_propaganda'] = 'true'
+    else:
+        dados['aceita_propaganda'] = 'false'
+
+    atualizar_usuario(DATA_DIR, user_id, dados)
+    session['user_plan'] = plano
+    flash(f'Plano {plano} ativado com sucesso!', 'success')
+    return redirect(url_for('planos'))
+
+
+@app.route('/planos/cancelar', methods=['POST'])
+@login_required
+def planos_cancelar():
+    """Cancela a assinatura (volta para gratuito)."""
+    user_id = session['user_id']
+    dados = {
+        'plano': 'gratuito',
+        'aceita_propaganda': 'false',
+    }
+    atualizar_usuario(DATA_DIR, user_id, dados)
+    session['user_plan'] = 'gratuito'
+    flash('Assinatura cancelada. Você está no plano Gratuito.', 'info')
+    return redirect(url_for('planos'))
+
+
+@app.route('/admin/global/usuarios/<int:user_id>/plano', methods=['POST'])
+@login_required
+@admin_global_required
+def admin_global_plano_usuario(user_id):
+    """Admin Global altera o plano de um usuário."""
+    plano = request.form.get('plano', 'gratuito')
+    if plano not in ('gratuito', 'comum', 'corporativo'):
+        flash('Plano inválido.', 'error')
+        return redirect(url_for('admin_global'))
+
+    dados = {
+        'plano': plano,
+        'assinatura_ativa': 'true' if plano != 'gratuito' else 'false',
+    }
+    if plano == 'gratuito':
+        dados['aceita_propaganda'] = 'false'
+
+    atualizar_usuario(DATA_DIR, user_id, dados)
+    flash(f'Plano do usuário alterado para {plano}.', 'success')
+    return redirect(url_for('admin_global'))
+
+
+# ═══════════════════════════════════════════════════════════════════
 #  ADMIN DO USUÁRIO (Configurações pessoais)
 # ═══════════════════════════════════════════════════════════════════
 
@@ -641,6 +898,7 @@ def init_sample_data():
             'email': 'admin@sistema.com',
             'senha_hash': generate_password_hash('admin123'),
             'perfil': 'admin',
+            'plano': 'comum',
             'id_corporacao': '',
             'ativo': 'true',
             'created_at': datetime.now().isoformat(),
@@ -652,6 +910,8 @@ def init_sample_data():
             'email': 'corp@empresa.com',
             'senha_hash': generate_password_hash('corp123'),
             'perfil': 'corporativo',
+            'plano': 'corporativo',
+            'assinatura_ativa': 'true',
             'id_corporacao': '1',
             'ativo': 'true',
             'created_at': datetime.now().isoformat(),
@@ -663,6 +923,7 @@ def init_sample_data():
             'email': 'user@email.com',
             'senha_hash': generate_password_hash('user123'),
             'perfil': 'comum',
+            'plano': 'gratuito',
             'id_corporacao': '1',
             'ativo': 'true',
             'created_at': datetime.now().isoformat(),
@@ -783,7 +1044,11 @@ def init_sample_data():
 # ─── Main ──────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
+    import os
+    debug_mode = os.environ.get('FLASK_DEBUG', '').lower() in ('1', 'true', 'yes')
     init_sample_data()
-    print(f"[app] Servidor iniciando em http://0.0.0.0:5000")
+    bind_host = os.environ.get('FLASK_HOST', '127.0.0.1')
+    bind_port = int(os.environ.get('FLASK_PORT', '5000'))
+    print(f"[app] Servidor iniciando em http://{bind_host}:{bind_port}")
     print(f"[app] Diretório de dados: {DATA_DIR}")
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host=bind_host, port=bind_port, debug=debug_mode)

@@ -108,6 +108,51 @@
             </div>
         </div>
 
+        <!-- Plano -->
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+            <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                <i class="fas fa-crown text-yellow-500 mr-2"></i>Plano
+            </h2>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-yellow-400 to-orange-500 flex items-center justify-center">
+                        <i class="fas fa-crown text-white"></i>
+                    </div>
+                    <div>
+                        <p class="text-xl font-bold text-gray-900 dark:text-white">
+                            {% if user.plano == 'corporativo' %}
+                            Corporativo
+                            {% elif user.plano == 'comum' %}
+                            Comum
+                            {% else %}
+                            Gratuito
+                            {% endif %}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                            {% if user.plano == 'comum' and user.aceita_propaganda == 'true' %}
+                            Grátis com propaganda
+                            {% elif user.plano == 'comum' %}
+                            R$ 6,99/mês
+                            {% elif user.plano == 'corporativo' %}
+                            R$ 3,99/usuário + R$ 20 CNPJ
+                            {% else %}
+                            3 quadros, 20 cartões por quadro
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <a href="{{ url_for('planos') }}"
+                   class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-arrow-right mr-1"></i> Gerenciar
+                </a>
+            </div>
+            {% if user.plano == 'comum' and user.aceita_propaganda == 'true' %}
+            <p class="mt-3 text-xs text-gray-400 dark:text-gray-500">
+                <i class="fas fa-ad mr-1"></i> Você está no Plano Comum com propaganda. Para remover anúncios, faça upgrade para a versão paga.
+            </p>
+            {% endif %}
+        </div>
+
         <!-- Armazenamento -->
         {% if espaco %}
         <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
