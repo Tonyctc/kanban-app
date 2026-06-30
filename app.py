@@ -10,7 +10,7 @@ Rotas organizadas por perfil:
 
 import os
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, flash, jsonify, abort)
@@ -97,6 +97,38 @@ MAX_CARD_TITLE_LENGTH = 200
 MAX_CARD_DESC_LENGTH = 2000
 MAX_BOARD_TITLE_LENGTH = 100
 MAX_BOARD_DESC_LENGTH = 500
+MAX_USER_NAME_LENGTH = 100
+MAX_USER_EMAIL_LENGTH = 200
+MIN_PASSWORD_LENGTH = 6
+MAX_PASSWORD_LENGTH = 128
+MAX_COLUMN_TITLE_LENGTH = 100
+MAX_CORP_ID_LENGTH = 50
+MAX_USERS_PER_CORPORACAO = 100
+MAX_NOME_ARQUIVO_LENGTH = 64
+SESSION_TIMEOUT_MINUTES = 480  # 8 horas
+
+# Helpers de validação
+import re as _re
+
+def validate_email(email: str) -> bool:
+    """Valida formato básico de email."""
+    if not email or len(email) > MAX_USER_EMAIL_LENGTH:
+        return False
+    return bool(_re.match(r'^[^@\s]+@[^@\s]+\.[^@\s]+$', email))
+
+def validate_board_name_safe(name: str) -> bool:
+    """Valida nome de quadro antes do sanitize."""
+    if not name or len(name) > 128:
+        return False
+    if '..' in name or '/' in name or '\\' in name:
+        return False
+    return True
+
+def validate_id_corporacao(corp_id: str) -> str:
+    """Sanitiza id_corporacao - apenas alfanumérico básico."""
+    if not corp_id:
+        return ''
+    return _re.sub(r'[^a-zA-Z0-9_-]', '', corp_id.strip())[:MAX_CORP_ID_LENGTH]
 
 def check_disk_quota(data_dir: str, user_id: int) -> bool:
     from okf_manager import get_espaco_disco_usuario
@@ -202,11 +234,19 @@ def login():
         return redirect(url_for('dashboard'))
 
     if request.method == 'POST':
-        email = request.form.get('email', '').strip()
-        senha = request.form.get('senha', '')
+        email = request.form.get('email', '').strip()[:MAX_USER_EMAIL_LENGTH]
+        senha = request.form.get('senha', '')[:MAX_PASSWORD_LENGTH]
 
         if not email or not senha:
             flash('Preencha email e senha.', 'error')
+            return render_template('login.html')
+
+        if len(senha) < MIN_PASSWORD_LENGTH:
+            flash('Senha muito curta.', 'error')
+            return render_template('login.html')
+
+        if not validate_email(email):
+            flash('Email inválido.', 'error')
             return render_template('login.html')
 
         user = get_usuario_por_email(DATA_DIR, email)
@@ -219,9 +259,12 @@ def login():
             return render_template('login.html')
 
         if check_password_hash(user.get('senha_hash', ''), senha):
+            session.permanent = True
+            app.permanent_session_lifetime = timedelta(minutes=SESSION_TIMEOUT_MINUTES)
             session['user_id'] = int(user['id'])
             session['user_name'] = user.get('nome', '')
             session['user_perfil'] = user.get('perfil', 'comum')
+            session['login_time'] = datetime.now().isoformat()
 
             flash(f'Bem-vindo(a), {user.get("nome")}!', 'success')
 
@@ -265,28 +308,54 @@ def admin_global():
 @admin_global_required
 def admin_global_criar_usuario():
     """Cria um novo usuário (Admin Global)."""
-    dados = {
-        'nome': request.form.get('nome', '').strip(),
-        'email': request.form.get('email', '').strip(),
-        'senha_hash': generate_password_hash(request.form.get('senha', '')),
-        'perfil': request.form.get('perfil', 'comum'),
-        'id_corporacao': request.form.get('id_corporacao', '').strip(),
-        'ativo': 'true',
-    }
+    nome = request.form.get('nome', '').strip()[:MAX_USER_NAME_LENGTH]
+    email = request.form.get('email', '').strip()[:MAX_USER_EMAIL_LENGTH]
+    senha = request.form.get('senha', '')
+    perfil = request.form.get('perfil', 'comum')
+    id_corporacao = validate_id_corporacao(request.form.get('id_corporacao', ''))
 
-
-    if not dados['nome'] or not dados['email']:
-        flash('Nome e email são obrigatórios.', 'error')
+    # Validações
+    if not nome:
+        flash('Nome é obrigatório.', 'error')
+        return redirect(url_for('admin_global'))
+    if not email:
+        flash('Email é obrigatório.', 'error')
+        return redirect(url_for('admin_global'))
+    if not validate_email(email):
+        flash('Formato de email inválido.', 'error')
+        return redirect(url_for('admin_global'))
+    if len(senha) < MIN_PASSWORD_LENGTH:
+        flash(f'Senha deve ter no mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'error')
+        return redirect(url_for('admin_global'))
+    if perfil not in ('comum', 'corporativo', 'admin'):
+        flash('Perfil inválido.', 'error')
         return redirect(url_for('admin_global'))
 
+    # Verificar limite de usuários por corporação
+    if id_corporacao:
+        todos = listar_usuarios(DATA_DIR)
+        count_corp = sum(1 for u in todos if u.get('id_corporacao') == id_corporacao)
+        if count_corp >= MAX_USERS_PER_CORPORACAO:
+            flash(f'Limite máximo de {MAX_USERS_PER_CORPORACAO} usuários por corporação atingido.', 'error')
+            return redirect(url_for('admin_global'))
+
     # Verificar se email já existe
-    existing = get_usuario_por_email(DATA_DIR, dados['email'])
+    existing = get_usuario_por_email(DATA_DIR, email)
     if existing:
         flash('Email já cadastrado.', 'error')
         return redirect(url_for('admin_global'))
 
+    dados = {
+        'nome': nome,
+        'email': email,
+        'senha_hash': generate_password_hash(senha),
+        'perfil': perfil,
+        'id_corporacao': id_corporacao,
+        'ativo': 'true',
+    }
+
     criar_usuario(DATA_DIR, dados)
-    flash(f'Usuário {dados["nome"]} criado com sucesso!', 'success')
+    flash(f'Usuário {nome} criado com sucesso!', 'success')
     return redirect(url_for('admin_global'))
 
 
@@ -295,14 +364,38 @@ def admin_global_criar_usuario():
 @admin_global_required
 def admin_global_editar_usuario(user_id):
     """Edita dados de um usuário (Admin Global)."""
+    # Impedir edição de campos protegidos
+    PROTECTED_FIELDS = {'id', 'created_at', 'senha_hash'}
+
     dados = {}
     for campo in ['nome', 'email', 'perfil', 'id_corporacao']:
+        if campo in PROTECTED_FIELDS:
+            continue
         val = request.form.get(campo, '').strip()
         if val:
-            dados[campo] = val
+            if campo == 'nome':
+                dados[campo] = val[:MAX_USER_NAME_LENGTH]
+            elif campo == 'email':
+                if not validate_email(val):
+                    flash('Formato de email inválido.', 'error')
+                    return redirect(url_for('admin_global'))
+                dados[campo] = val[:MAX_USER_EMAIL_LENGTH]
+            elif campo == 'id_corporacao':
+                dados[campo] = validate_id_corporacao(val)
+            elif campo == 'perfil':
+                if val not in ('comum', 'corporativo', 'admin'):
+                    flash('Perfil inválido.', 'error')
+                    return redirect(url_for('admin_global'))
+                dados[campo] = val
+            else:
+                dados[campo] = val
 
-    if request.form.get('senha'):
-        dados['senha_hash'] = generate_password_hash(request.form['senha'])
+    nova_senha = request.form.get('senha', '')
+    if nova_senha:
+        if len(nova_senha) < MIN_PASSWORD_LENGTH:
+            flash(f'Senha deve ter no mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'error')
+            return redirect(url_for('admin_global'))
+        dados['senha_hash'] = generate_password_hash(nova_senha)
 
     if 'ativo' in request.form:
         dados['ativo'] = request.form['ativo']
@@ -450,27 +543,48 @@ def admin_corporativo():
 def admin_corporativo_criar_usuario():
     """Cria um usuário comum sob a corporação."""
     user = get_usuario_por_id(DATA_DIR, session['user_id'])
+    corporacao_id = user.get('id_corporacao', '')
 
-    dados = {
-        'nome': request.form.get('nome', '').strip(),
-        'email': request.form.get('email', '').strip(),
-        'senha_hash': generate_password_hash(request.form.get('senha', '')),
-        'perfil': 'comum',
-        'id_corporacao': user.get('id_corporacao', ''),
-        'ativo': 'true',
-    }
+    nome = request.form.get('nome', '').strip()[:MAX_USER_NAME_LENGTH]
+    email = request.form.get('email', '').strip()[:MAX_USER_EMAIL_LENGTH]
+    senha = request.form.get('senha', '')
 
-    if not dados['nome'] or not dados['email']:
-        flash('Nome e email são obrigatórios.', 'error')
+    if not nome:
+        flash('Nome é obrigatório.', 'error')
+        return redirect(url_for('admin_corporativo'))
+    if not email:
+        flash('Email é obrigatório.', 'error')
+        return redirect(url_for('admin_corporativo'))
+    if not validate_email(email):
+        flash('Formato de email inválido.', 'error')
+        return redirect(url_for('admin_corporativo'))
+    if len(senha) < MIN_PASSWORD_LENGTH:
+        flash(f'Senha deve ter no mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'error')
         return redirect(url_for('admin_corporativo'))
 
-    existing = get_usuario_por_email(DATA_DIR, dados['email'])
+    # Limite de usuários por corporação
+    todos = listar_usuarios(DATA_DIR)
+    count_corp = sum(1 for u in todos if u.get('id_corporacao') == corporacao_id)
+    if count_corp >= MAX_USERS_PER_CORPORACAO:
+        flash(f'Limite máximo de {MAX_USERS_PER_CORPORACAO} usuários por corporação.', 'error')
+        return redirect(url_for('admin_corporativo'))
+
+    existing = get_usuario_por_email(DATA_DIR, email)
     if existing:
         flash('Email já cadastrado.', 'error')
         return redirect(url_for('admin_corporativo'))
 
+    dados = {
+        'nome': nome,
+        'email': email,
+        'senha_hash': generate_password_hash(senha),
+        'perfil': 'comum',
+        'id_corporacao': corporacao_id,
+        'ativo': 'true',
+    }
+
     criar_usuario(DATA_DIR, dados)
-    flash(f'Usuário {dados["nome"]} criado na corporação!', 'success')
+    flash(f'Usuário {nome} criado na corporação!', 'success')
     return redirect(url_for('admin_corporativo'))
 
 
@@ -596,6 +710,10 @@ def board_view(board_name):
 def board_delete(board_name):
     """Exclui um quadro Kanban."""
     user_id = session['user_id']
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        flash('Quadro não encontrado.', 'error')
+        return redirect(url_for('dashboard'))
     if deletar_quadro(DATA_DIR, user_id, board_name):
         flash('Quadro excluído.', 'success')
     else:
@@ -661,12 +779,37 @@ def api_add_card(board_name):
 @login_required
 def api_update_card(board_name, card_id):
     """Atualiza dados de um cartão."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+
     user_id = session['user_id']
     data = request.get_json()
     if not data:
         return jsonify({'error': 'Dados inválidos'}), 400
 
-    if atualizar_card(DATA_DIR, user_id, board_name, card_id, data):
+    # Validar card_id
+    if not card_id or not _re.match(r'^card_\d{3,}$', card_id):
+        return jsonify({'error': 'ID de cartão inválido.'}), 400
+
+    # Sanitizar dados - só permitir campos conhecidos
+    ALLOWED_CARD_FIELDS = {'titulo', 'descricao', 'prioridade', 'data_entrega'}
+    sanitized = {}
+    for key in data:
+        if key in ALLOWED_CARD_FIELDS:
+            if key == 'titulo':
+                sanitized[key] = str(data[key])[:MAX_CARD_TITLE_LENGTH]
+            elif key == 'descricao':
+                sanitized[key] = str(data[key])[:MAX_CARD_DESC_LENGTH]
+            elif key == 'prioridade':
+                sanitized[key] = data[key] if data[key] in ('alta', 'media', 'baixa') else 'media'
+            elif key == 'data_entrega':
+                sanitized[key] = str(data[key])[:10]
+
+    if not sanitized:
+        return jsonify({'error': 'Nenhum campo válido para atualizar.'}), 400
+
+    if atualizar_card(DATA_DIR, user_id, board_name, card_id, sanitized):
         return jsonify({'success': True})
     return jsonify({'error': 'Cartão não encontrado'}), 404
 
@@ -675,8 +818,13 @@ def api_update_card(board_name, card_id):
 @login_required
 def api_delete_card(board_name, card_id):
     """Remove um cartão."""
-    user_id = session['user_id']
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+    if not card_id or not _re.match(r'^card_\d{3,}$', card_id):
+        return jsonify({'error': 'ID de cartão inválido.'}), 400
 
+    user_id = session['user_id']
     if remover_card(DATA_DIR, user_id, board_name, card_id):
         return jsonify({'success': True})
     return jsonify({'error': 'Cartão não encontrado'}), 404
@@ -686,11 +834,37 @@ def api_delete_card(board_name, card_id):
 @login_required
 def api_move_card(board_name, card_id):
     """Move um cartão entre colunas ou reordena."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+
     user_id = session['user_id']
     data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Dados inválidos'}), 400
 
-    column_id = data.get('column_id', '')
-    new_index = data.get('new_index', -1)
+    column_id = (data.get('column_id', '') or '')[:50]
+    if not column_id:
+        return jsonify({'error': 'column_id é obrigatório.'}), 400
+
+    # Validar card_id
+    if not card_id or not _re.match(r'^card_\d{3,}$', card_id):
+        return jsonify({'error': 'ID de cartão inválido.'}), 400
+
+    # Validar new_index
+    try:
+        new_index = int(data.get('new_index', -1))
+    except (ValueError, TypeError):
+        new_index = -1
+    if new_index < -1 or new_index > 500:
+        new_index = -1
+
+    # Verificar se a coluna de destino existe
+    quadro = get_quadro_completo(DATA_DIR, user_id, board_name)
+    if quadro:
+        col_ids = [c['id'] for c in quadro['colunas']]
+        if column_id not in col_ids:
+            return jsonify({'error': 'Coluna de destino não encontrada.'}), 400
 
     if mover_card(DATA_DIR, user_id, board_name, card_id, column_id, new_index):
         return jsonify({'success': True})
@@ -699,12 +873,27 @@ def api_move_card(board_name, card_id):
 
 @app.route('/api/quadro/<board_name>/coluna', methods=['POST'])
 @login_required
+@rate_limit(max_requests=30, window_seconds=60)
 def api_add_column(board_name):
     """Adiciona uma nova coluna."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+
     user_id = session['user_id']
     data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Dados inválidos'}), 400
 
-    titulo = data.get('title', 'Nova Coluna')
+    titulo = (data.get('title', 'Nova Coluna') or '')[:MAX_COLUMN_TITLE_LENGTH]
+    if not titulo.strip():
+        return jsonify({'error': 'Título da coluna é obrigatório.'}), 400
+
+    # Verificar limite de colunas por quadro
+    quadro = get_quadro_completo(DATA_DIR, user_id, board_name)
+    if quadro and len(quadro['colunas']) >= MAX_COLUMNS_PER_BOARD:
+        return jsonify({'error': f'Limite máximo de {MAX_COLUMNS_PER_BOARD} colunas por quadro.'}), 400
+
     result = adicionar_coluna(DATA_DIR, user_id, board_name, titulo)
 
     if result:
@@ -716,10 +905,34 @@ def api_add_column(board_name):
 @login_required
 def api_update_column(board_name, column_id):
     """Atualiza dados de uma coluna."""
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+
     user_id = session['user_id']
     data = request.get_json()
+    if not data:
+        return jsonify({'error': 'Dados inválidos'}), 400
 
-    if atualizar_coluna(DATA_DIR, user_id, board_name, column_id, data):
+    # Sanitizar dados - só permitir campos conhecidos
+    ALLOWED_COLUMN_FIELDS = {'title', 'order'}
+    sanitized = {}
+    for key in data:
+        if key in ALLOWED_COLUMN_FIELDS:
+            if key == 'title':
+                sanitized[key] = str(data[key])[:MAX_COLUMN_TITLE_LENGTH]
+            elif key == 'order':
+                try:
+                    val = int(data[key])
+                    if 0 <= val <= 20:
+                        sanitized[key] = str(val)
+                except (ValueError, TypeError):
+                    pass
+
+    if not sanitized:
+        return jsonify({'error': 'Nenhum campo válido para atualizar.'}), 400
+
+    if atualizar_coluna(DATA_DIR, user_id, board_name, column_id, sanitized):
         return jsonify({'success': True})
     return jsonify({'error': 'Coluna não encontrada'}), 404
 
@@ -728,8 +941,13 @@ def api_update_column(board_name, column_id):
 @login_required
 def api_delete_column(board_name, column_id):
     """Remove uma coluna e seus cartões."""
-    user_id = session['user_id']
+    board_name = sanitize_board_name(board_name)
+    if not board_name:
+        return jsonify({'error': 'Quadro não encontrado'}), 404
+    if not column_id or len(column_id) > 50:
+        return jsonify({'error': 'ID de coluna inválido.'}), 400
 
+    user_id = session['user_id']
     if remover_coluna(DATA_DIR, user_id, board_name, column_id):
         return jsonify({'success': True})
     return jsonify({'error': 'Coluna não encontrada'}), 404
@@ -752,14 +970,19 @@ def planos():
 
 @app.route('/planos/assinar', methods=['POST'])
 @login_required
+@rate_limit(max_requests=10, window_seconds=60)
 def planos_assinar():
     """Assina um plano (simulação de pagamento)."""
     user_id = session['user_id']
-    plano = request.form.get('plano', '')
-    tipo_pagamento = request.form.get('tipo_pagamento', 'pago')
+    plano = request.form.get('plano', '')[:20]
+    tipo_pagamento = request.form.get('tipo_pagamento', 'pago')[:20]
 
     if plano not in ('comum', 'corporativo'):
         flash('Plano inválido.', 'error')
+        return redirect(url_for('planos'))
+
+    if tipo_pagamento not in ('pago', 'propaganda'):
+        flash('Tipo de pagamento inválido.', 'error')
         return redirect(url_for('planos'))
 
     # Validar: corporativo só para admins corporativos
@@ -837,15 +1060,21 @@ def admin_user():
 
     if request.method == 'POST':
         dados = {}
-        nome = request.form.get('nome', '').strip()
-        email = request.form.get('email', '').strip()
+        nome = request.form.get('nome', '').strip()[:MAX_USER_NAME_LENGTH]
+        email = request.form.get('email', '').strip()[:MAX_USER_EMAIL_LENGTH]
         senha_atual = request.form.get('senha_atual', '')
         nova_senha = request.form.get('nova_senha', '')
         confirmar_senha = request.form.get('confirmar_senha', '')
 
         if nome:
+            if len(nome) < 2:
+                flash('Nome deve ter no mínimo 2 caracteres.', 'error')
+                return redirect(url_for('admin_user'))
             dados['nome'] = nome
         if email:
+            if not validate_email(email):
+                flash('Formato de email inválido.', 'error')
+                return redirect(url_for('admin_user'))
             # Verificar se email já está em uso
             existing = get_usuario_por_email(DATA_DIR, email)
             if existing and int(existing['id']) != user_id:
@@ -854,6 +1083,9 @@ def admin_user():
             dados['email'] = email
 
         if nova_senha:
+            if len(nova_senha) < MIN_PASSWORD_LENGTH:
+                flash(f'Nova senha deve ter no mínimo {MIN_PASSWORD_LENGTH} caracteres.', 'error')
+                return redirect(url_for('admin_user'))
             if not check_password_hash(user['senha_hash'], senha_atual):
                 flash('Senha atual incorreta.', 'error')
                 return redirect(url_for('admin_user'))
@@ -861,6 +1093,9 @@ def admin_user():
                 flash('Nova senha e confirmação não conferem.', 'error')
                 return redirect(url_for('admin_user'))
             dados['senha_hash'] = generate_password_hash(nova_senha)
+
+            # Renovar sessão após troca de senha
+            session['login_time'] = datetime.now().isoformat()
 
         if dados:
             atualizar_usuario(DATA_DIR, user_id, dados)

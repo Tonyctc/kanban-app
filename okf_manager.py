@@ -308,8 +308,13 @@ def criar_quadro(data_dir: str, user_id: int, nome: str, titulo: str = '',
     Cria um novo quadro Kanban para o usuário com colunas padrão.
     O nome do arquivo será {nome}.okf (sem espaços, lowercase).
     """
+    if not nome or not isinstance(nome, str):
+        return None
+    if '..' in nome or '/' in nome or '\\' in nome:
+        return None
+
     board_name = re.sub(r'[^a-z0-9_]', '', nome.lower().replace(' ', '_'))
-    if not board_name:
+    if not board_name or len(board_name) > 64:
         return None
 
     board_path = get_board_path(data_dir, user_id, board_name)
@@ -442,7 +447,19 @@ def adicionar_card(data_dir: str, user_id: int, board_name: str,
     Adiciona um novo cartão a uma coluna do quadro.
     """
     board_path = get_board_path(data_dir, user_id, board_name)
+    if not os.path.exists(board_path):
+        return None
+
     data = read_okf(board_path)
+
+    # Validar que a coluna existe
+    col_section_id = f"column:{column_id}"
+    if col_section_id not in data['sections']:
+        return None  # coluna não existe
+
+    # Validar dados do cartão
+    if not card_data or not isinstance(card_data, dict):
+        return None
 
     # Gerar ID do cartão
     next_card_num = 1
@@ -456,16 +473,19 @@ def adicionar_card(data_dir: str, user_id: int, board_name: str,
             except ValueError:
                 pass
 
-    card_id = f"card_{next_card_num:03d}"
+    if next_card_num > 9999:
+        return None  # limite de segurança de cards por quadro
+
+    card_id = f"card_{next_card_num:04d}"
 
     # Adicionar seção do cartão
     card_section_id = f"card:{card_id}"
     card_values = {
         'id': card_id,
-        'titulo': card_data.get('titulo', 'Novo Cartão'),
-        'descricao': card_data.get('descricao', ''),
-        'prioridade': card_data.get('prioridade', 'media'),
-        'data_entrega': card_data.get('data_entrega', ''),
+        'titulo': str(card_data.get('titulo', 'Novo Cartão'))[:200],
+        'descricao': str(card_data.get('descricao', ''))[:2000],
+        'prioridade': card_data.get('prioridade', 'media') if card_data.get('prioridade') in ('alta', 'media', 'baixa') else 'media',
+        'data_entrega': str(card_data.get('data_entrega', ''))[:10],
     }
     data['sections'][card_section_id] = {
         'type': 'card',
@@ -475,14 +495,12 @@ def adicionar_card(data_dir: str, user_id: int, board_name: str,
     data['section_order'].append(card_section_id)
 
     # Adicionar ID do cartão à coluna
-    col_section_id = f"column:{column_id}"
-    if col_section_id in data['sections']:
-        col = data['sections'][col_section_id]
-        current_ids = col['values'].get('card_ids', '').strip()
-        if current_ids:
-            col['values']['card_ids'] = f"{current_ids},{card_id}"
-        else:
-            col['values']['card_ids'] = card_id
+    col = data['sections'][col_section_id]
+    current_ids = col['values'].get('card_ids', '').strip()
+    if current_ids:
+        col['values']['card_ids'] = f"{current_ids},{card_id}"
+    else:
+        col['values']['card_ids'] = card_id
 
     # Atualizar timestamp
     if 'meta:main' in data['sections']:
