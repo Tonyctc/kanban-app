@@ -117,7 +117,7 @@ add('board_novo_card', pt_br='Novo Cartão', en='New Card', fr='Nouvelle Carte',
 add('board_nova_coluna', pt_br='Nova Coluna', en='New Column', fr='Nouvelle Colonne', it='Nuova Colonna', zh='新列')
 add('board_editar_card', pt_br='Editar Cartão', en='Edit Card', fr='Modifier la Carte', it='Modifica Carta', zh='编辑卡片')
 add('board_titulo_card', pt_br='Título *', en='Title *', fr='Titre *', it='Titolo *', zh='标题 *')
-add('board_descricao', pt_br='Descricao', en='Description', fr='Description', it='Descrizione', zh='描述')
+add('board_descricao', pt_br='Descrição', en='Description', fr='Description', it='Descrizione', zh='描述')
 add('board_prioridade', pt_br='Prioridade', en='Priority', fr='Priorite', it='Priorita', zh='优先级')
 add('board_prioridade_baixa', pt_br='Baixa', en='Low', fr='Basse', it='Bassa', zh='低')
 add('board_prioridade_media', pt_br='Média', en='Medium', fr='Moyenne', it='Media', zh='中')
@@ -188,7 +188,7 @@ add('modal_criar', pt_br='Criar', en='Create', fr='Creer', it='Crea', zh='创建
 add('modal_salvar', pt_br='Salvar', en='Save', fr='Sauvegarder', it='Salva', zh='保存')
 add('modal_nome', pt_br='Nome *', en='Name *', fr='Nom *', it='Nome *', zh='名称 *')
 add('modal_titulo', pt_br='Título', en='Title', fr='Titre', it='Titolo', zh='标题')
-add('modal_descricao', pt_br='Descricao', en='Description', fr='Description', it='Descrizione', zh='描述')
+add('modal_descricao', pt_br='Descrição', en='Description', fr='Description', it='Descrizione', zh='描述')
 
 # Logs
 add('admin_logs_titulo', pt_br='Logs de Armazenamento (Arquivos OKF)', en='Storage Logs (OKF Files)', fr='Logs de Stockage (Fichiers OKF)', it='Log di Archiviazione (File OKF)', zh='存储日志（OKF 文件）')
@@ -260,26 +260,26 @@ add('planos_feat_tema', pt_br='Tema escuro', en='Dark theme', fr='Theme sombre',
 add('planos_feat_gestao_corp', pt_br='Gestão corporativa', en='Corporate management', fr='Gestion corporate', it='Gestione aziendale', zh='企业管理')
 add('planos_feat_suporte', pt_br='Suporte', en='Support', fr='Support', it='Supporto', zh='支持')
 add('planos_feat_comunidade', pt_br='Comunitário', en='Community', fr='Communautaire', it='Community', zh='社区')
-add('planos_feat_prioritario', pt_br='Prioritario', en='Priority', fr='Prioritaire', it='Prioritario', zh='优先')
+add('planos_feat_prioritario', pt_br='Prioritário', en='Priority', fr='Prioritaire', it='Prioritario', zh='优先')
 add('planos_feat_multi_usuarios', pt_br='Múltiplos usuários', en='Multiple users', fr='Utilisateurs multiples', it='Utenti multipli', zh='多用户')
 add('planos_feat_ver_equipe', pt_br='Visualizar quadros da equipe', en='View team boards', fr='Voir les tableaux de l\'equipe', it='Visualizza lavagne del team', zh='查看团队看板')
 add('planos_feat_criar_usuarios', pt_br='Criar usuários sob sua corporação', en='Create users under your corporation', fr='Creer des utilisateurs sous votre societe', it='Crea utenti nella tua azienda', zh='创建企业下的用户')
-add('planos_feat_limites', pt_br='Limites de quadros por usuario', en='Board limits per user', fr='Limites de tableaux par utilisateur', it='Limiti lavagne per utente', zh='每用户看板限制')
-add('planos_feat_reordenacao', pt_br='Drag & Drop + reordenacao', en='Drag & Drop + reordering', fr='Drag & Drop + reorganisation', it='Drag & Drop + riordino', zh='拖放 + 重新排序')
+add('planos_feat_limites', pt_br='Limites de quadros por usuário', en='Board limits per user', fr='Limites de tableaux par utilisateur', it='Limiti lavagne per utente', zh='每用户看板限制')
+add('planos_feat_reordenacao', pt_br='Drag & Drop + reordenação', en='Drag & Drop + reordering', fr='Drag & Drop + reorganisation', it='Drag & Drop + riordino', zh='拖放 + 重新排序')
 add('planos_feat_todos_gratuito', pt_br='Todos os recursos do Gratuito', en='All Free features', fr='Toutes les fonctionnalites Gratuites', it='Tutte le funzionalita Gratuite', zh='所有免费功能')
-add('planos_feat_suporte_prioritario', pt_br='Suporte prioritario', en='Priority support', fr='Support prioritaire', it='Supporto prioritario', zh='优先支持')
+add('planos_feat_suporte_prioritario', pt_br='Suporte prioritário', en='Priority support', fr='Support prioritaire', it='Supporto prioritario', zh='优先支持')
 
-add('planos_feat_3quadros', pt_br='Ate 3 quadros Kanban', en='Up to 3 Kanban boards', fr="Jusqu'a 3 tableaux Kanban", it='Fino a 3 lavagne Kanban', zh='最多 3 个看板')
-add('planos_feat_20cartoes', pt_br='Ate 20 cartoes por quadro', en='Up to 20 cards per board', fr="Jusqu'a 20 cartes par tableau", it='Fino a 20 carte per lavagna', zh='每看板最多 20 个卡片')
-add('planos_feat_20quadros', pt_br='Ate 20 quadros Kanban', en='Up to 20 Kanban boards', fr="Jusqu'a 20 tableaux Kanban", it='Fino a 20 lavagne Kanban', zh='最多 20 个看板')
-add('planos_feat_200cartoes', pt_br='Ate 200 cartoes por quadro', en='Up to 200 cards per board', fr="Jusqu'a 200 cartes par tableau", it='Fino a 200 carte per lavagna', zh='每看板最多 200 个卡片')
-add('planos_feat_50quadros', pt_br='Ate 50 quadros Kanban', en='Up to 50 Kanban boards', fr="Jusqu'a 50 tableaux Kanban", it='Fino a 50 lavagne Kanban', zh='最多 50 个看板')
+add('planos_feat_3quadros', pt_br='Até 3 quadros Kanban', en='Up to 3 Kanban boards', fr="Jusqu'a 3 tableaux Kanban", it='Fino a 3 lavagne Kanban', zh='最多 3 个看板')
+add('planos_feat_20cartoes', pt_br='Até 20 cartões por quadro', en='Up to 20 cards per board', fr="Jusqu'a 20 cartes par tableau", it='Fino a 20 carte per lavagna', zh='每看板最多 20 个卡片')
+add('planos_feat_20quadros', pt_br='Até 20 quadros Kanban', en='Up to 20 Kanban boards', fr="Jusqu'a 20 tableaux Kanban", it='Fino a 20 lavagne Kanban', zh='最多 20 个看板')
+add('planos_feat_200cartoes', pt_br='Até 200 cartões por quadro', en='Up to 200 cards per board', fr="Jusqu'a 200 cartes par tableau", it='Fino a 200 carte per lavagna', zh='每看板最多 200 个卡片')
+add('planos_feat_50quadros', pt_br='Até 50 quadros Kanban', en='Up to 50 Kanban boards', fr="Jusqu'a 50 tableaux Kanban", it='Fino a 50 lavagne Kanban', zh='最多 50 个看板')
 
-add('planos_desc_gratuito', pt_br='3 quadros, 20 cartoes', en='3 boards, 20 cards', fr='3 tableaux, 20 cartes', it='3 lavagne, 20 carte', zh='3 个看板，20 个卡片')
-add('planos_desc_comum', pt_br='20 quadros, 200 cartoes', en='20 boards, 200 cards', fr='20 tableaux, 200 cartes', it='20 lavagne, 200 carte', zh='20 个看板，200 个卡片')
-add('planos_desc_corporativo', pt_br='50 quadros, gestao corporativa', en='50 boards, corporate management', fr='50 tableaux, gestion corporate', it='50 lavagne, gestione aziendale', zh='50 个看板，企业管理')
+add('planos_desc_gratuito', pt_br='3 quadros, 20 cartões', en='3 boards, 20 cards', fr='3 tableaux, 20 cartes', it='3 lavagne, 20 carte', zh='3 个看板，20 个卡片')
+add('planos_desc_comum', pt_br='20 quadros, 200 cartões', en='20 boards, 200 cards', fr='20 tableaux, 200 cartes', it='20 lavagne, 200 carte', zh='20 个看板，200 个卡片')
+add('planos_desc_corporativo', pt_br='50 quadros, gestão corporativa', en='50 boards, corporate management', fr='50 tableaux, gestion corporate', it='50 lavagne, gestione aziendale', zh='50 个看板，企业管理')
 
-add('planos_disponivel_corp', pt_br='Disponivel para Adm. Corporativo', en='Available for Corp. Admin', fr='Disponible pour Adm. Corporate', it='Disponibile per Admin Aziendale', zh='企业管理员可用')
+add('planos_disponivel_corp', pt_br='Disponível para Adm. Corporativo', en='Available for Corp. Admin', fr='Disponible pour Adm. Corporate', it='Disponibile per Admin Aziendale', zh='企业管理员可用')
 
 # ═════════════════════════════════════════════════════════════════════
 #  SISTEMA / ERROR
@@ -288,8 +288,8 @@ add('planos_disponivel_corp', pt_br='Disponivel para Adm. Corporativo', en='Avai
 add('error_403', pt_br='Acesso negado.', en='Access denied.', fr='Acces refuse.', it='Accesso negato.', zh='访问被拒绝。')
 add('error_404', pt_br='Página não encontrada.', en='Page not found.', fr='Page non trouvee.', it='Pagina non trovata.', zh='页面未找到。')
 add('error_429', pt_br='Muitas requisições. Aguarde e tente novamente.', en='Too many requests. Please wait and try again.', fr='Trop de requetes. Veuillez attendre et reessayer.', it='Troppe richieste. Attendere e riprovare.', zh='请求过多。请稍后再试。')
-add('error_quadro_nao_encontrado', pt_br='Quadro nao encontrado.', en='Board not found.', fr='Tableau non trouve.', it='Lavagna non trovata.', zh='看板未找到。')
-add('error_nome_invalido', pt_br='Nome do quadro invalido.', en='Invalid board name.', fr='Nom de tableau invalide.', it='Nome lavagna non valido.', zh='看板名称无效。')
+add('error_quadro_nao_encontrado', pt_br='Quadro não encontrado.', en='Board not found.', fr='Tableau non trouve.', it='Lavagna non trovata.', zh='看板未找到。')
+add('error_nome_invalido', pt_br='Nome do quadro inválido.', en='Invalid board name.', fr='Nom de tableau invalide.', it='Nome lavagna non valido.', zh='看板名称无效。')
 
 
 # ═════════════════════════════════════════════════════════════════════
