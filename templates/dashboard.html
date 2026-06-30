@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Meus Quadros - Kanban App{% endblock %}
+{% block title %}{{ _('dashboard_title') }} - Kanban App{% endblock %}
 
 {% block content %}
 {% set plan_limits = namespace(max_quadros=20) %}
@@ -17,16 +17,16 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    Você está usando {{ quadros|length }} de {{ plan_limits.max_quadros }} quadros do plano Gratuito
+                    {{ _('upgrade_banner_uso') }} {{ quadros|length }} {{ _('upgrade_banner_de') }} {{ plan_limits.max_quadros }} {{ _('upgrade_banner_gratuito') }}
                 </p>
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                    Faça upgrade para o Plano Comum (R$ 6,99/mês) e tenha até 20 quadros!
+                    {{ _('upgrade_banner_texto') }}
                 </p>
             </div>
         </div>
         <a href="{{ url_for('planos') }}"
            class="flex-shrink-0 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors">
-            <i class="fas fa-arrow-right mr-1"></i> Ver Planos
+            <i class="fas fa-arrow-right mr-1"></i> {{ _('upgrade_banner_ver') }}
         </a>
     </div>
 </div>
@@ -36,15 +36,15 @@
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-columns text-indigo-500 mr-2"></i>Meus Quadros
+                <i class="fas fa-columns text-indigo-500 mr-2"></i>{{ _('dashboard_title') }}
             </h1>
             <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Gerencie seus quadros Kanban &mdash; {{ quadros|length }} quadro(s)
+                {{ quadros|length }} {{ _('dashboard_quadro_count') }}
             </p>
         </div>
         <button onclick="document.getElementById('modal-criar-quadro').classList.remove('hidden')"
                 class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
-            <i class="fas fa-plus mr-2"></i> Novo Quadro
+            <i class="fas fa-plus mr-2"></i> {{ _('dashboard_novo_quadro') }}
         </button>
     </div>
 </div>
@@ -73,15 +73,15 @@
             <div class="mt-4 flex items-center justify-between text-xs text-gray-400 dark:text-gray-500">
                 <span><i class="far fa-calendar-alt mr-1"></i> {{ q.created_at[:10] if q.created_at else '—' }}</span>
                 <span class="group-hover:text-indigo-500 transition-colors">
-                    <i class="fas fa-arrow-right mr-1"></i> Abrir
+                    <i class="fas fa-arrow-right mr-1"></i> {{ _('dashboard_abrir') }}
                 </span>
             </div>
         </a>
         <div class="px-6 pb-4 flex justify-end border-t border-gray-100 dark:border-gray-700 pt-3">
             <form action="{{ url_for('board_delete', board_name=q.nome) }}" method="POST"
-                  onsubmit="return confirm('Excluir o quadro \"{{ q.titulo }}\"? Todos os cartões serão perdidos.');">
+                  onsubmit="return confirm('{{ _('dashboard_confirm_excluir') }} &quot;{{ q.titulo }}&quot;? {{ _('dashboard_todos_perdidos') }}');">
                 <button type="submit" class="text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 transition-colors">
-                    <i class="fas fa-trash-alt mr-1"></i> Excluir
+                    <i class="fas fa-trash-alt mr-1"></i> {{ _('dashboard_excluir') }}
                 </button>
             </form>
         </div>
@@ -93,11 +93,11 @@
     <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
         <i class="fas fa-folder-open text-gray-400 text-2xl"></i>
     </div>
-    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">Nenhum quadro ainda</h3>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Crie seu primeiro quadro Kanban para começar</p>
+    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-1">{{ _('dashboard_nenhum_quadro') }}</h3>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ _('dashboard_crie_primeiro') }}</p>
     <button onclick="document.getElementById('modal-criar-quadro').classList.remove('hidden')"
             class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors">
-        <i class="fas fa-plus mr-2"></i> Criar Quadro
+        <i class="fas fa-plus mr-2"></i> {{ _('dashboard_criar_quadro') }}
     </button>
 </div>
 {% endif %}
@@ -109,7 +109,7 @@
          onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-plus-circle text-indigo-500 mr-2"></i>Novo Quadro
+                <i class="fas fa-plus-circle text-indigo-500 mr-2"></i>{{ _('modal_novo_quadro_titulo') }}
             </h2>
             <button onclick="document.getElementById('modal-criar-quadro').classList.add('hidden')"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -119,38 +119,38 @@
 
         <form action="{{ url_for('dashboard_criar_quadro') }}" method="POST" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome *</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('modal_nome') }} *</label>
                 <input type="text" name="nome" required
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                               focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                       placeholder="ex: projetos, vendas, pessoal">
-                <p class="text-xs text-gray-400 mt-1">Será usado como nome do arquivo .okf</p>
+                       placeholder="{{ _('modal_nome') }}">
+                <p class="text-xs text-gray-400 mt-1">{{ _('modal_nome_arquivo') }}</p>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('modal_titulo') }}</label>
                 <input type="text" name="titulo"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                               bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                               focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                       placeholder="Título do quadro (opcional)">
+                       placeholder="{{ _('modal_titulo_opcional') }}">
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('modal_descricao') }}</label>
                 <textarea name="descricao" rows="2"
                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white
                                  focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                          placeholder="Descrição do quadro (opcional)"></textarea>
+                          placeholder="{{ _('modal_descricao_opcional') }}"></textarea>
             </div>
             <div class="flex justify-end space-x-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-criar-quadro').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors">
-                    Cancelar
+                    {{ _('modal_cancelar') }}
                 </button>
                 <button type="submit"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
-                    <i class="fas fa-check mr-1"></i> Criar
+                    <i class="fas fa-check mr-1"></i> {{ _('modal_criar') }}
                 </button>
             </div>
         </form>
@@ -162,9 +162,9 @@
 <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
     <div class="flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
         <i class="fas fa-hdd text-gray-400"></i>
-        <span>Espaço em disco utilizado: <strong class="text-gray-700 dark:text-gray-200">{{ espaco.formatado }}</strong></span>
+        <span>{{ _('dashboard_espaco_disco') }} <strong class="text-gray-700 dark:text-gray-200">{{ espaco.formatado }}</strong></span>
         <span class="text-gray-300 dark:text-gray-600">|</span>
-        <span>Arquivos: <strong class="text-gray-700 dark:text-gray-200">{{ espaco.arquivos }}</strong></span>
+        <span>{{ _('dashboard_arquivos') }} <strong class="text-gray-700 dark:text-gray-200">{{ espaco.arquivos }}</strong></span>
     </div>
 </div>
 {% endif %}

@@ -4,9 +4,9 @@
 {% block content %}
 <div class="mb-6">
     <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-        <i class="fas fa-globe text-red-500 mr-2"></i>Painel do Administrador Global
+        <i class="fas fa-globe text-red-500 mr-2"></i>{{ _('admin_global_titulo') }}
     </h1>
-    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie usuários, monitore métricas e visualize logs do sistema</p>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ _('admin_global_subtitulo') }}</p>
 </div>
 
 <!-- Métricas -->
@@ -17,7 +17,7 @@
                 <i class="fas fa-users text-blue-600 dark:text-blue-400 text-xl"></i>
             </div>
             <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Total Usuários</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ _('admin_global_total_usuarios') }}</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_usuarios }}</p>
             </div>
         </div>
@@ -28,7 +28,7 @@
                 <i class="fas fa-archive text-green-600 dark:text-green-400 text-xl"></i>
             </div>
             <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Quadros OKF</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ _('admin_global_quadros_okf') }}</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_quadros }}</p>
             </div>
         </div>
@@ -39,7 +39,7 @@
                 <i class="fas fa-file-alt text-purple-600 dark:text-purple-400 text-xl"></i>
             </div>
             <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Arquivos OKF</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ _('admin_global_arquivos_okf') }}</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_arquivos_okf }}</p>
             </div>
         </div>
@@ -50,7 +50,7 @@
                 <i class="fas fa-chart-pie text-orange-600 dark:text-orange-400 text-xl"></i>
             </div>
             <div>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Perfis</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">{{ _('admin_global_perfis') }}</p>
                 <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.admin + metricas.usuarios_por_perfil.corporativo + metricas.usuarios_por_perfil.comum }}</p>
             </div>
         </div>
@@ -60,42 +60,42 @@
 <!-- Distribuição de Perfis -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Distribuição por Perfil</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{{ _('admin_global_distribuicao') }}</h2>
         <div class="space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-red-500 mr-2"></span>Admin Global
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-red-500 mr-2"></span>{{ _('profile_admin_global') }}
                 </span>
                 <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.admin }}</span>
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-purple-500 mr-2"></span>Corporativo
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-purple-500 mr-2"></span>{{ _('profile_admin_corp') }}
                 </span>
                 <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.corporativo }}</span>
             </div>
             <div class="flex items-center justify-between">
                 <span class="text-sm text-gray-600 dark:text-gray-400">
-                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-blue-500 mr-2"></span>Comum
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-blue-500 mr-2"></span>{{ _('profile_usuario_comum') }}
                 </span>
                 <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.comum }}</span>
             </div>
         </div>
     </div>
     <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
-        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ações Rápidas</h2>
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{{ _('admin_global_acoes_rapidas') }}</h2>
         <div class="space-y-2">
             <button onclick="document.getElementById('modal-criar-usuario').classList.remove('hidden')"
                     class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
-                <i class="fas fa-user-plus text-green-500 mr-2"></i> Criar novo usuário
+                <i class="fas fa-user-plus text-green-500 mr-2"></i> {{ _('admin_global_criar_usuario') }}
             </button>
             <a href="{{ url_for('admin_global_logs') }}"
                class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
-                <i class="fas fa-history text-indigo-500 mr-2"></i> Ver logs de armazenamento
+                <i class="fas fa-history text-indigo-500 mr-2"></i> {{ _('admin_global_ver_logs') }}
             </a>
             <a href="{{ url_for('dashboard') }}"
                class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
-                <i class="fas fa-columns text-purple-500 mr-2"></i> Meus quadros
+                <i class="fas fa-columns text-purple-500 mr-2"></i> {{ _('admin_global_meus_quadros') }}
             </a>
         </div>
     </div>
@@ -105,25 +105,25 @@
 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            <i class="fas fa-list mr-2"></i>Usuários do Sistema
+            <i class="fas fa-list mr-2"></i>{{ _('admin_global_tabela') }}
         </h2>
         <button onclick="document.getElementById('modal-criar-usuario').classList.remove('hidden')"
                 class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors">
-            <i class="fas fa-plus mr-1"></i> Novo
+            <i class="fas fa-plus mr-1"></i> {{ _('admin_global_novo') }}
         </button>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50 text-left">
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ID</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nome</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Perfil</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Plano</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Corp</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ações</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_id') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_nome') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_email') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_perfil') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_plano') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_corp') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_status') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_acoes') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -137,7 +137,7 @@
                             {% if u.perfil == 'admin' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300
                             {% elif u.perfil == 'corporativo' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300
                             {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300{% endif %}">
-                            {{ {'admin': 'Admin', 'corporativo': 'Corp', 'comum': 'Comum'}[u.perfil] or u.perfil }}
+                            {{ {'admin': _('perfil_label_admin'), 'corporativo': _('perfil_label_corp'), 'comum': _('perfil_label_comum')}[u.perfil] or u.perfil }}
                         </span>
                     </td>
                     <td class="px-5 py-3">
@@ -145,12 +145,12 @@
                             {% if u.plano == 'corporativo' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300
                             {% elif u.plano == 'comum' %}bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300
                             {% else %}bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400{% endif %}">
-                            {{ u.plano or 'gratuito' }}
+                            {{ _('planos_' + (u.plano or 'gratuito')) }}
                         </span>
                         {% if u.id|string != '0' %}
                         <button onclick="alterarPlano('{{ u.id }}', '{{ u.plano or 'gratuito' }}')"
                                 class="ml-1 text-xs text-indigo-400 hover:text-indigo-600 transition-colors"
-                                title="Alterar plano">
+                                title="{{ _('admin_modal_alterar_plano') }}">
                             <i class="fas fa-edit"></i>
                         </button>
                         {% endif %}
@@ -158,9 +158,9 @@
                     <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">{{ u.id_corporacao or '—' }}</td>
                     <td class="px-5 py-3">
                         {% if u.ativo == 'true' or u.ativo is none %}
-                        <span class="text-green-600 dark:text-green-400"><i class="fas fa-circle text-[8px] mr-1"></i>Ativo</span>
+                        <span class="text-green-600 dark:text-green-400"><i class="fas fa-circle text-[8px] mr-1"></i>{{ _('status_ativo') }}</span>
                         {% else %}
-                        <span class="text-red-600 dark:text-red-400"><i class="fas fa-circle text-[8px] mr-1"></i>Suspenso</span>
+                        <span class="text-red-600 dark:text-red-400"><i class="fas fa-circle text-[8px] mr-1"></i>{{ _('status_suspenso') }}</span>
                         {% endif %}
                     </td>
                     <td class="px-5 py-3">
@@ -174,7 +174,7 @@
                             <form action="{{ url_for('admin_global_suspender_usuario', user_id=u.id) }}" method="POST" class="inline">
                                 <input type="hidden" name="acao" value="suspender">
                                 <button type="submit" class="text-xs text-yellow-500 hover:text-yellow-700 transition-colors"
-                                        onclick="return confirm('Suspender {{ u.nome }}?')">
+                                        onclick="return confirm('{{ _('admin_modal_suspender') }} {{ u.nome }}?')">
                                     <i class="fas fa-ban"></i>
                                 </button>
                             </form>
@@ -182,13 +182,13 @@
                             <form action="{{ url_for('admin_global_suspender_usuario', user_id=u.id) }}" method="POST" class="inline">
                                 <input type="hidden" name="acao" value="reativar">
                                 <button type="submit" class="text-xs text-green-500 hover:text-green-700 transition-colors"
-                                        title="Reativar">
+                                        title="{{ _('admin_modal_reativar') }}">
                                     <i class="fas fa-check-circle"></i>
                                 </button>
                             </form>
                             {% endif %}
                             <form action="{{ url_for('admin_global_excluir_usuario', user_id=u.id) }}" method="POST" class="inline"
-                                  onsubmit="return confirm('Excluir permanentemente {{ u.nome }} e todos os seus quadros?');">
+                                  onsubmit="return confirm('{{ _('admin_modal_confirm_excluir') }} {{ u.nome }} {{ _('admin_modal_e_seus_quadros') }}?');">
                                 <button type="submit" class="text-xs text-red-500 hover:text-red-700 transition-colors">
                                     <i class="fas fa-trash-alt"></i>
                                 </button>
@@ -210,17 +210,17 @@
 <div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
     <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
-            <i class="fas fa-history mr-2"></i>Logs de Armazenamento (Arquivos OKF)
+            <i class="fas fa-history mr-2"></i>{{ _('admin_logs_titulo') }}
         </h2>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm">
             <thead>
                 <tr class="bg-gray-50 dark:bg-gray-700/50 text-left">
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Arquivo</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usuário</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tamanho</th>
-                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Modificado</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_arquivo') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_usuario') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_tamanho') }}</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">{{ _('th_modificado') }}</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
@@ -246,7 +246,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-user-plus text-indigo-500 mr-2"></i>Novo Usuário
+                <i class="fas fa-user-plus text-indigo-500 mr-2"></i>{{ _('admin_modal_novo_usuario') }}
             </h2>
             <button onclick="document.getElementById('modal-criar-usuario').classList.add('hidden')"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -256,7 +256,7 @@
         <form action="{{ url_for('admin_global_criar_usuario') }}" method="POST" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('modal_nome') }} *</label>
                     <input type="text" name="nome" required
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                 </div>
@@ -268,33 +268,33 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('admin_modal_senha') }} *</label>
                     <input type="password" name="senha" required
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Perfil</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('th_perfil') }}</label>
                     <select name="perfil"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
-                        <option value="comum">Comum</option>
-                        <option value="corporativo">Corporativo</option>
+                        <option value="comum">{{ _('perfil_label_comum') }}</option>
+                        <option value="corporativo">{{ _('perfil_label_corp') }}</option>
                     </select>
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Corporação</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('admin_modal_id_corp') }}</label>
                 <input type="text" name="id_corporacao"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-                       placeholder="Deixe em branco para nenhuma">
+                       placeholder="{{ _('admin_modal_placeholder_corp') }}">
             </div>
             <div class="flex justify-end space-x-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-criar-usuario').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
-                    Cancelar
+                    {{ _('modal_cancelar') }}
                 </button>
                 <button type="submit"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
-                    <i class="fas fa-check mr-1"></i> Criar
+                    <i class="fas fa-check mr-1"></i> {{ _('modal_criar') }}
                 </button>
             </div>
         </form>
@@ -307,7 +307,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-user-edit text-indigo-500 mr-2"></i>Editar Usuário
+                <i class="fas fa-user-edit text-indigo-500 mr-2"></i>{{ _('admin_modal_editar_usuario') }}
             </h2>
             <button onclick="document.getElementById('modal-editar-usuario').classList.add('hidden')"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -317,7 +317,7 @@
         <form id="form-editar-usuario" method="POST" class="space-y-4">
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('modal_nome') }}</label>
                     <input type="text" id="edit-user-nome" name="nome"
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
                 </div>
@@ -329,33 +329,33 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nova Senha</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('admin_modal_nova_senha') }}</label>
                     <input type="password" name="senha"
                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
-                           placeholder="Deixar vazio = manter">
+                           placeholder="{{ _('admin_modal_deixar_vazio') }}">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Perfil</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('th_perfil') }}</label>
                     <select id="edit-user-perfil" name="perfil"
                             class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
-                        <option value="comum">Comum</option>
-                        <option value="corporativo">Corporativo</option>
+                        <option value="comum">{{ _('perfil_label_comum') }}</option>
+                        <option value="corporativo">{{ _('perfil_label_corp') }}</option>
                     </select>
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Corporação</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{{ _('admin_modal_id_corp') }}</label>
                 <input type="text" id="edit-user-corp" name="id_corporacao"
                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
             </div>
             <div class="flex justify-end space-x-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-editar-usuario').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
-                    Cancelar
+                    {{ _('modal_cancelar') }}
                 </button>
                 <button type="submit"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
-                    <i class="fas fa-save mr-1"></i> Salvar
+                    <i class="fas fa-save mr-1"></i> {{ _('modal_salvar') }}
                 </button>
             </div>
         </form>
@@ -368,7 +368,7 @@
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-lg font-bold text-gray-900 dark:text-white">
-                <i class="fas fa-crown text-yellow-500 mr-2"></i>Alterar Plano
+                <i class="fas fa-crown text-yellow-500 mr-2"></i>{{ _('admin_modal_alterar_plano') }}
             </h2>
             <button onclick="document.getElementById('modal-alterar-plano').classList.add('hidden')"
                     class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
@@ -377,27 +377,27 @@
         </div>
         <form id="form-alterar-plano" method="POST" class="space-y-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Selecione o plano</label>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{{ _('admin_modal_selecione_plano') }}</label>
                 <div class="space-y-2">
                     <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <input type="radio" name="plano" value="gratuito" class="mr-3">
                         <div>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">Gratuito</span>
-                            <p class="text-xs text-gray-500">3 quadros, 20 cartões</p>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ _('planos_gratuito') }}</span>
+                            <p class="text-xs text-gray-500">{{ _('planos_desc_gratuito') }}</p>
                         </div>
                     </label>
                     <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <input type="radio" name="plano" value="comum" class="mr-3">
                         <div>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">Comum</span>
-                            <p class="text-xs text-gray-500">20 quadros, 200 cartões</p>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ _('planos_comum') }}</span>
+                            <p class="text-xs text-gray-500">{{ _('planos_desc_comum') }}</p>
                         </div>
                     </label>
                     <label class="flex items-center p-3 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <input type="radio" name="plano" value="corporativo" class="mr-3">
                         <div>
-                            <span class="text-sm font-medium text-gray-900 dark:text-white">Corporativo</span>
-                            <p class="text-xs text-gray-500">50 quadros, gestão corporativa</p>
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">{{ _('planos_corporativo') }}</span>
+                            <p class="text-xs text-gray-500">{{ _('planos_desc_corporativo') }}</p>
                         </div>
                     </label>
                 </div>
@@ -405,11 +405,11 @@
             <div class="flex justify-end space-x-3 pt-2">
                 <button type="button" onclick="document.getElementById('modal-alterar-plano').classList.add('hidden')"
                         class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
-                    Cancelar
+                    {{ _('modal_cancelar') }}
                 </button>
                 <button type="submit"
                         class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
-                    <i class="fas fa-check mr-1"></i> Salvar
+                    <i class="fas fa-check mr-1"></i> {{ _('modal_salvar') }}
                 </button>
             </div>
         </form>

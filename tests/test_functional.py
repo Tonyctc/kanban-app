@@ -67,7 +67,7 @@ class KanbanTester:
         table = p.locator('table')
         self.check("User table visible", table.is_visible())
         self.check("Admin Geral in table", p.locator('table').locator('text=Administrador Geral').count() > 0)
-        create_btn = p.locator('button:has-text("Novo Usuário")')
+        create_btn = p.locator('button:has-text("Novo")').last
         self.check("Create user button visible", create_btn.is_visible())
     
     def test_board_view(self):

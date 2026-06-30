@@ -17,6 +17,7 @@ from flask import (Flask, render_template, request, redirect, url_for,
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from config import Config
+from translations import _, detect_language, LANGUAGES, LANGUAGE_NAMES
 from okf_manager import (
     listar_usuarios, get_usuario_por_id, get_usuario_por_email,
     criar_usuario, atualizar_usuario, remover_usuario,
@@ -210,15 +211,29 @@ def sanitize_board_name(name: str) -> str:
 
 @app.context_processor
 def inject_global_context():
-    """Injeta dados do usuário logado em todos os templates."""
+    """Injeta dados do usuario logado e traducao em todos os templates."""
     user_id = session.get('user_id')
     user = None
     if user_id is not None:
         user = get_usuario_por_id(DATA_DIR, user_id)
+
+    # Auto-detectar idioma na primeira visita
+    if 'lang' not in session:
+        session['lang'] = detect_language(request.headers.get('Accept-Language', ''))
+
+    lang = session.get('lang', 'pt-BR')
+
+    def t(key):
+        return _(key, lang)
+
     return {
         'current_user': user,
         'current_user_id': user_id,
         'perfil': verificar_perfil(user_id) if user_id is not None else None,
+        '_': t,
+        'lang': lang,
+        'LANGUAGES': LANGUAGES,
+        'LANGUAGE_NAMES': LANGUAGE_NAMES,
     }
 
 
@@ -283,10 +298,29 @@ def login():
 
 @app.route('/logout')
 def logout():
-    """Encerra a sessão do usuário."""
+    """Encerra a sessao do usuario."""
     session.clear()
-    flash('Sessão encerrada.', 'info')
+    flash(_('login_session_expired', get_user_lang()), 'info')
     return redirect(url_for('login'))
+
+
+# ─── Suporte a Multi-idioma ─────────────────────────────────────
+
+def get_user_lang():
+    """Retorna o idioma atual do usuario (da sessao)."""
+    return session.get('lang', 'pt-BR')
+
+
+@app.route('/lang/<code>')
+def set_language(code):
+    """Altera o idioma da sessao."""
+    if code in LANGUAGES:
+        session['lang'] = code
+    else:
+        session['lang'] = 'pt-BR'
+    # Redirecionar de volta para a pagina anterior
+    referer = request.headers.get('Referer', url_for('dashboard'))
+    return redirect(referer or url_for('dashboard'))
 
 
 # ═══════════════════════════════════════════════════════════════════
