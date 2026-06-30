@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Kanban App{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-200" x-data="appTheme()" :class="{'dark': isDark}">
+    <style>
+        /* Transição suave para o tema */
+        html { transition: background-color 0.3s, color 0.3s; }
+        [x-cloak] { display: none !important; }
+    </style>
+
+    <!-- Navbar -->
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center space-x-2">
+                        <i class="fas fa-kanban text-indigo-600 dark:text-indigo-400 text-xl"></i>
+                        <span class="font-bold text-xl text-gray-800 dark:text-white">Kanban</span>
+                    </a>
+                    {% if current_user_id is not none %}
+                    <div class="ml-8 hidden md:flex space-x-4">
+                        {% if perfil == 'admin' %}
+                        <a href="{{ url_for('admin_global') }}"
+                           class="px-3 py-2 rounded-md text-sm font-medium {% if request.path.startswith('/admin/global') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+                            <i class="fas fa-globe mr-1"></i> Admin Global
+                        </a>
+                        {% elif perfil == 'corporativo' %}
+                        <a href="{{ url_for('admin_corporativo') }}"
+                           class="px-3 py-2 rounded-md text-sm font-medium {% if request.path.startswith('/admin/corporativo') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+                            <i class="fas fa-building mr-1"></i> Corporativo
+                        </a>
+                        <a href="{{ url_for('dashboard') }}"
+                           class="px-3 py-2 rounded-md text-sm font-medium {% if request.path == '/dashboard' or request.path.startswith('/dashboard/') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+                            <i class="fas fa-columns mr-1"></i> Meus Quadros
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('dashboard') }}"
+                           class="px-3 py-2 rounded-md text-sm font-medium {% if request.path == '/dashboard' or request.path.startswith('/dashboard/') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300{% else %}text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white{% endif %}">
+                            <i class="fas fa-columns mr-1"></i> Quadros
+                        </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="flex items-center space-x-3">
+                    <!-- Toggle Tema -->
+                    <button @click="toggleTheme()"
+                            class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                            title="Alternar tema">
+                        <i :class="isDark ? 'fas fa-sun' : 'fas fa-moon'" class="text-lg"></i>
+                    </button>
+
+                    {% if current_user_id is not none %}
+                    <!-- Menu do Usuário -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" @click.outside="open = false"
+                                class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                            <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold">
+                                {{ (current_user.nome or 'U')[:2]|upper }}
+                            </div>
+                            <span class="hidden md:block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                {{ current_user.nome if current_user else 'Usuário' }}
+                            </span>
+                            <i class="fas fa-chevron-down text-xs text-gray-400"></i>
+                        </button>
+                        <div x-show="open" x-cloak
+                             class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                            <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ current_user.nome if current_user else '' }}</p>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_user.email if current_user else '' }}</p>
+                                <span class="inline-block mt-1 px-2 py-0.5 text-xs rounded-full
+                                    {% if perfil == 'admin' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300
+                                    {% elif perfil == 'corporativo' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300
+                                    {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300{% endif %}">
+                                    {{ {'admin': 'Admin Global', 'corporativo': 'Admin Corp', 'comum': 'Usuário'}[perfil] or perfil }}
+                                </span>
+                            </div>
+                            {% if perfil == 'comum' or perfil == 'corporativo' %}
+                            <a href="{{ url_for('admin_user') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-user-cog mr-2"></i> Minha Conta
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-sign-out-alt mr-2"></i> Sair
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Navbar Mobile -->
+        {% if current_user_id is not none %}
+        <div class="md:hidden border-t border-gray-200 dark:border-gray-700">
+            <div class="flex space-x-1 px-2 py-1 overflow-x-auto">
+                {% if perfil == 'admin' %}
+                <a href="{{ url_for('admin_global') }}" class="flex-shrink-0 px-3 py-2 rounded-md text-xs font-medium {% if request.path.startswith('/admin/global') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700{% else %}text-gray-600{% endif %}">
+                    <i class="fas fa-globe mr-1"></i> Global
+                </a>
+                {% elif perfil == 'corporativo' %}
+                <a href="{{ url_for('admin_corporativo') }}" class="flex-shrink-0 px-3 py-2 rounded-md text-xs font-medium {% if request.path.startswith('/admin/corporativo') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700{% else %}text-gray-600{% endif %}">
+                    <i class="fas fa-building mr-1"></i> Corporativo
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="flex-shrink-0 px-3 py-2 rounded-md text-xs font-medium {% if request.path == '/dashboard' or request.path.startswith('/dashboard/') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700{% else %}text-gray-600{% endif %}">
+                    <i class="fas fa-columns mr-1"></i> Quadros
+                </a>
+                {% else %}
+                <a href="{{ url_for('dashboard') }}" class="flex-shrink-0 px-3 py-2 rounded-md text-xs font-medium {% if request.path == '/dashboard' or request.path.startswith('/dashboard/') %}bg-indigo-100 dark:bg-indigo-900 text-indigo-700{% else %}text-gray-600{% endif %}">
+                    <i class="fas fa-columns mr-1"></i> Quadros
+                </a>
+                {% endif %}
+                <a href="{{ url_for('admin_user') }}" class="flex-shrink-0 px-3 py-2 rounded-md text-xs font-medium text-gray-600 dark:text-gray-400">
+                    <i class="fas fa-user-cog mr-1"></i> Conta
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="max-w-7xl mx-auto px-4 pt-4">
+        {% for category, message in messages %}
+        <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
+             class="mb-2 px-4 py-3 rounded-lg text-sm font-medium flex items-center justify-between
+                    {% if category == 'error' %}bg-red-100 text-red-700 border border-red-200
+                    {% elif category == 'success' %}bg-green-100 text-green-700 border border-green-200
+                    {% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200
+                    {% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+            <span>
+                {% if category == 'error' %}<i class="fas fa-exclamation-circle mr-2"></i>
+                {% elif category == 'success' %}<i class="fas fa-check-circle mr-2"></i>
+                {% elif category == 'warning' %}<i class="fas fa-exclamation-triangle mr-2"></i>
+                {% else %}<i class="fas fa-info-circle mr-2"></i>{% endif %}
+                {{ message }}
+            </span>
+            <button @click="show = false" class="ml-2 text-current opacity-60 hover:opacity-100">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="{% block main_class %}max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6{% endblock %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="text-center py-4 text-xs text-gray-400 dark:text-gray-600">
+        Kanban App &mdash; Persistência em arquivos OKF &mdash; Python + Flask
+    </footer>
+
+    <script>
+        function appTheme() {
+            return {
+                isDark: localStorage.getItem('kanban-theme') === 'dark',
+                toggleTheme() {
+                    this.isDark = !this.isDark;
+                    localStorage.setItem('kanban-theme', this.isDark ? 'dark' : 'light');
+                    document.documentElement.setAttribute('data-theme', this.isDark ? 'dark' : 'light');
+                },
+                init() {
+                    if (this.isDark) {
+                        document.documentElement.setAttribute('data-theme', 'dark');
+                    }
+                }
+            }
+        }
+    </script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

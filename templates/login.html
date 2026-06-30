@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Login - Kanban App{% endblock %}
+{% block main_class %}min-h-screen flex items-center justify-center px-4{% endblock %}
+
+{% block content %}
+<div class="w-full max-w-md">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-indigo-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-kanban text-white text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Kanban App</h1>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Faça login para continuar</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('login') }}" class="space-y-4">
+            <div>
+                <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-mail</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="email" id="email" name="email" required
+                           class="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg
+                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                  focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                           placeholder="seu@email.com">
+                </div>
+            </div>
+
+            <div>
+                <label for="senha" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="password" id="senha" name="senha" required
+                           class="w-full pl-10 pr-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg
+                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                  focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                           placeholder="••••••••">
+                </div>
+            </div>
+
+            <button type="submit"
+                    class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg
+                           transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <i class="fas fa-sign-in-alt mr-2"></i> Entrar
+            </button>
+        </form>
+
+        <!-- Credenciais de teste -->
+        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <p class="text-xs text-gray-500 dark:text-gray-400 text-center mb-3">Contas de demonstração</p>
+            <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Admin Geral</span>
+                    <span class="text-gray-500 dark:text-gray-400">admin@sistema.com</span>
+                    <code class="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">admin123</code>
+                </div>
+                <div class="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Admin Corp</span>
+                    <span class="text-gray-500 dark:text-gray-400">corp@empresa.com</span>
+                    <code class="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">corp123</code>
+                </div>
+                <div class="flex items-center justify-between px-3 py-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <span class="font-medium text-gray-700 dark:text-gray-300">Usuário</span>
+                    <span class="text-gray-500 dark:text-gray-400">user@email.com</span>
+                    <code class="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 px-1.5 py-0.5 rounded">user123</code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center mt-4">
+        <p class="text-xs text-gray-400 dark:text-gray-600">
+            <i class="fas fa-database mr-1"></i> Dados persistidos em arquivos OKF &mdash; Sem banco de dados
+        </p>
+    </div>
+</div>
+{% endblock %}

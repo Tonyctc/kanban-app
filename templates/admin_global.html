@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+{% block title %}Admin Global - Kanban App{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+        <i class="fas fa-globe text-red-500 mr-2"></i>Painel do Administrador Global
+    </h1>
+    <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Gerencie usuários, monitore métricas e visualize logs do sistema</p>
+</div>
+
+<!-- Métricas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center">
+                <i class="fas fa-users text-blue-600 dark:text-blue-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Total Usuários</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_usuarios }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900/50 flex items-center justify-center">
+                <i class="fas fa-archive text-green-600 dark:text-green-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Quadros OKF</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_quadros }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                <i class="fas fa-file-alt text-purple-600 dark:text-purple-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Arquivos OKF</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.total_arquivos_okf }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <div class="flex items-center space-x-3">
+            <div class="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/50 flex items-center justify-center">
+                <i class="fas fa-chart-pie text-orange-600 dark:text-orange-400 text-xl"></i>
+            </div>
+            <div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Perfis</p>
+                <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.admin + metricas.usuarios_por_perfil.corporativo + metricas.usuarios_por_perfil.comum }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Distribuição de Perfis -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Distribuição por Perfil</h2>
+        <div class="space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-red-500 mr-2"></span>Admin Global
+                </span>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.admin }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-purple-500 mr-2"></span>Corporativo
+                </span>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.corporativo }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                    <span class="w-2.5 h-2.5 inline-block rounded-full bg-blue-500 mr-2"></span>Comum
+                </span>
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ metricas.usuarios_por_perfil.comum }}</span>
+            </div>
+        </div>
+    </div>
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-5">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Ações Rápidas</h2>
+        <div class="space-y-2">
+            <button onclick="document.getElementById('modal-criar-usuario').classList.remove('hidden')"
+                    class="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                <i class="fas fa-user-plus text-green-500 mr-2"></i> Criar novo usuário
+            </button>
+            <a href="{{ url_for('admin_global_logs') }}"
+               class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                <i class="fas fa-history text-indigo-500 mr-2"></i> Ver logs de armazenamento
+            </a>
+            <a href="{{ url_for('dashboard') }}"
+               class="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm text-gray-700 dark:text-gray-300 transition-colors">
+                <i class="fas fa-columns text-purple-500 mr-2"></i> Meus quadros
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Usuários -->
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <i class="fas fa-list mr-2"></i>Usuários do Sistema
+        </h2>
+        <button onclick="document.getElementById('modal-criar-usuario').classList.remove('hidden')"
+                class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-medium rounded-lg transition-colors">
+            <i class="fas fa-plus mr-1"></i> Novo
+        </button>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-left">
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">ID</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Nome</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Email</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Perfil</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Corp</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Status</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Ações</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for u in usuarios %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+                    <td class="px-5 py-3 font-mono text-xs text-gray-500 dark:text-gray-400">{{ u.id }}</td>
+                    <td class="px-5 py-3 font-medium text-gray-900 dark:text-white">{{ u.nome }}</td>
+                    <td class="px-5 py-3 text-gray-600 dark:text-gray-400">{{ u.email }}</td>
+                    <td class="px-5 py-3">
+                        <span class="inline-flex px-2 py-0.5 text-xs rounded-full
+                            {% if u.perfil == 'admin' %}bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300
+                            {% elif u.perfil == 'corporativo' %}bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300
+                            {% else %}bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300{% endif %}">
+                            {{ {'admin': 'Admin', 'corporativo': 'Corp', 'comum': 'Comum'}[u.perfil] or u.perfil }}
+                        </span>
+                    </td>
+                    <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">{{ u.id_corporacao or '—' }}</td>
+                    <td class="px-5 py-3">
+                        {% if u.ativo == 'true' or u.ativo is none %}
+                        <span class="text-green-600 dark:text-green-400"><i class="fas fa-circle text-[8px] mr-1"></i>Ativo</span>
+                        {% else %}
+                        <span class="text-red-600 dark:text-red-400"><i class="fas fa-circle text-[8px] mr-1"></i>Suspenso</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-5 py-3">
+                        <div class="flex items-center space-x-2">
+                            {% if u.id|string != '0' %}
+                            <button onclick="editarUsuario('{{ u.id }}', '{{ u.nome }}', '{{ u.email }}', '{{ u.perfil }}', '{{ u.id_corporacao }}')"
+                                    class="text-xs text-indigo-500 hover:text-indigo-700 dark:hover:text-indigo-400 transition-colors">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            {% if u.ativo == 'true' or u.ativo is none %}
+                            <form action="{{ url_for('admin_global_suspender_usuario', user_id=u.id) }}" method="POST" class="inline">
+                                <input type="hidden" name="acao" value="suspender">
+                                <button type="submit" class="text-xs text-yellow-500 hover:text-yellow-700 transition-colors"
+                                        onclick="return confirm('Suspender {{ u.nome }}?')">
+                                    <i class="fas fa-ban"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <form action="{{ url_for('admin_global_suspender_usuario', user_id=u.id) }}" method="POST" class="inline">
+                                <input type="hidden" name="acao" value="reativar">
+                                <button type="submit" class="text-xs text-green-500 hover:text-green-700 transition-colors"
+                                        title="Reativar">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form action="{{ url_for('admin_global_excluir_usuario', user_id=u.id) }}" method="POST" class="inline"
+                                  onsubmit="return confirm('Excluir permanentemente {{ u.nome }} e todos os seus quadros?');">
+                                <button type="submit" class="text-xs text-red-500 hover:text-red-700 transition-colors">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-xs text-gray-400">—</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Logs de Armazenamento -->
+{% if logs is defined and logs %}
+<div class="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
+        <h2 class="text-sm font-semibold text-gray-700 dark:text-gray-300">
+            <i class="fas fa-history mr-2"></i>Logs de Armazenamento (Arquivos OKF)
+        </h2>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="bg-gray-50 dark:bg-gray-700/50 text-left">
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Arquivo</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Usuário</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Tamanho</th>
+                    <th class="px-5 py-3 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Modificado</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+                {% for log in logs %}
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/30">
+                    <td class="px-5 py-3 font-mono text-xs text-gray-600 dark:text-gray-400">{{ log.arquivo }}</td>
+                    <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">{{ log.usuario }}</td>
+                    <td class="px-5 py-3 text-xs text-gray-600 dark:text-gray-400">
+                        {% if log.tamanho < 1024 %}{{ log.tamanho }} B{% elif log.tamanho < 1048576 %}{{ (log.tamanho / 1024)|round(1) }} KB{% else %}{{ (log.tamanho / 1048576)|round(1) }} MB{% endif %}
+                    </td>
+                    <td class="px-5 py-3 text-xs text-gray-500 dark:text-gray-400">{{ log.modificado[:19] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- Modal Criar Usuário -->
+<div id="modal-criar-usuario" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-user-plus text-indigo-500 mr-2"></i>Novo Usuário
+            </h2>
+            <button onclick="document.getElementById('modal-criar-usuario').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form action="{{ url_for('admin_global_criar_usuario') }}" method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome *</label>
+                    <input type="text" name="nome" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email *</label>
+                    <input type="email" name="email" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Senha *</label>
+                    <input type="password" name="senha" required
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Perfil</label>
+                    <select name="perfil"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                        <option value="comum">Comum</option>
+                        <option value="corporativo">Corporativo</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Corporação</label>
+                <input type="text" name="id_corporacao"
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                       placeholder="Deixe em branco para nenhuma">
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-criar-usuario').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
+                    <i class="fas fa-check mr-1"></i> Criar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Usuário -->
+<div id="modal-editar-usuario" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-lg" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-user-edit text-indigo-500 mr-2"></i>Editar Usuário
+            </h2>
+            <button onclick="document.getElementById('modal-editar-usuario').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="form-editar-usuario" method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome</label>
+                    <input type="text" id="edit-user-nome" name="nome"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                    <input type="email" id="edit-user-email" name="email"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nova Senha</label>
+                    <input type="password" name="senha"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500"
+                           placeholder="Deixar vazio = manter">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Perfil</label>
+                    <select id="edit-user-perfil" name="perfil"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+                        <option value="comum">Comum</option>
+                        <option value="corporativo">Corporativo</option>
+                    </select>
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ID Corporação</label>
+                <input type="text" id="edit-user-corp" name="id_corporacao"
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-editar-usuario').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg">
+                    <i class="fas fa-save mr-1"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function editarUsuario(id, nome, email, perfil, corp) {
+        const form = document.getElementById('form-editar-usuario');
+        form.action = `/admin/global/usuarios/${id}/editar`;
+        document.getElementById('edit-user-nome').value = nome;
+        document.getElementById('edit-user-email').value = email;
+        document.getElementById('edit-user-perfil').value = perfil;
+        document.getElementById('edit-user-corp').value = corp;
+        document.getElementById('modal-editar-usuario').classList.remove('hidden');
+    }
+</script>
+{% endblock %}

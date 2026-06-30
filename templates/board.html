@@ -1,0 +1,514 @@
+{% extends "base.html" %}
+{% block title %}{{ quadro.meta.title }} - Kanban{% endblock %}
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors">
+                <i class="fas fa-arrow-left mr-1"></i> Voltar
+            </a>
+            <h1 class="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                {{ quadro.meta.title }}
+            </h1>
+            {% if quadro.meta.description %}
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ quadro.meta.description }}</p>
+            {% endif %}
+        </div>
+        <div class="flex items-center space-x-2">
+            <button onclick="document.getElementById('modal-novo-card').classList.remove('hidden')"
+                    class="inline-flex items-center px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-plus mr-1"></i> Card
+            </button>
+            <button onclick="document.getElementById('modal-nova-coluna').classList.remove('hidden')"
+                    class="inline-flex items-center px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
+                <i class="fas fa-columns mr-1"></i> Coluna
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Kanban Board -->
+<div class="kanban-board overflow-x-auto pb-4">
+    <div class="flex space-x-4 min-w-max" id="kanban-columns">
+        {% for coluna in quadro.colunas %}
+        <div class="kanban-column bg-gray-100 dark:bg-gray-800 rounded-xl w-72 flex-shrink-0
+                    border border-gray-200 dark:border-gray-700 flex flex-col"
+             data-column-id="{{ coluna.id }}">
+            <!-- Cabeçalho da Coluna -->
+            <div class="px-3 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <h3 class="font-semibold text-sm text-gray-700 dark:text-gray-300">{{ coluna.title }}</h3>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 bg-gray-200 dark:bg-gray-700 px-1.5 py-0.5 rounded-full card-count">{{ coluna.cards|length }}</span>
+                </div>
+                <button onclick="confirmDeleteColumn('{{ coluna.id }}', '{{ coluna.title }}')"
+                        class="text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors text-xs"
+                        title="Excluir coluna">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Lista de Cards (Sortable) -->
+            <div class="kanban-cards p-3 space-y-3 flex-1 min-h-[200px]" data-column-id="{{ coluna.id }}">
+                {% for card in coluna.cards %}
+                <div class="kanban-card bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600
+                            hover:shadow-md transition-shadow cursor-grab active:cursor-grabbing"
+                     data-card-id="{{ card.id }}"
+                     data-card-titulo="{{ card.titulo }}"
+                     data-card-descricao="{{ card.descricao }}"
+                     data-card-prioridade="{{ card.prioridade }}"
+                     data-card-data="{{ card.data_entrega }}">
+
+                    <!-- Prioridade -->
+                    <div class="px-3 pt-2 flex items-center justify-between">
+                        <span class="inline-block w-2 h-2 rounded-full
+                            {% if card.prioridade == 'alta' %}bg-red-500
+                            {% elif card.prioridade == 'media' %}bg-yellow-500
+                            {% else %}bg-green-500{% endif %}"
+                              title="Prioridade {{ {'alta': 'Alta', 'media': 'Média', 'baixa': 'Baixa'}[card.prioridade] }}">
+                        </span>
+                        {% if card.data_entrega %}
+                        <span class="text-xs text-gray-400 dark:text-gray-500">
+                            <i class="far fa-calendar-alt mr-1"></i>{{ card.data_entrega[:10] }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Título -->
+                    <div class="px-3 py-1">
+                        <h4 class="text-sm font-medium text-gray-900 dark:text-white card-title">{{ card.titulo }}</h4>
+                        {% if card.descricao %}
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2 card-desc">{{ card.descricao }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="px-3 pb-2 pt-1 flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="editCard('{{ card.id }}')"
+                                class="text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors"
+                                title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteCard('{{ card.id }}')"
+                                class="text-xs text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                                title="Excluir">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Botão Adicionar Card -->
+            <div class="px-3 pb-3">
+                <button onclick="openNewCard('{{ coluna.id }}')"
+                        class="w-full py-1.5 text-xs text-gray-400 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors">
+                    <i class="fas fa-plus mr-1"></i> Adicionar cartão
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Modal Novo Card -->
+<div id="modal-novo-card" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-plus-circle text-indigo-500 mr-2"></i>Novo Cartão
+            </h2>
+            <button onclick="document.getElementById('modal-novo-card').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="form-novo-card" onsubmit="return submitNewCard(event)" class="space-y-4">
+            <input type="hidden" id="card-column-id" value="">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título *</label>
+                <input type="text" id="card-titulo" required
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                              bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                              focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="Título do cartão">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
+                <textarea id="card-descricao" rows="2"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                 bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="Descrição (opcional)"></textarea>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
+                    <select id="card-prioridade"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                   focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="baixa">Baixa</option>
+                        <option value="media" selected>Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data Entrega</label>
+                    <input type="date" id="card-data"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                  focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-novo-card').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-check mr-1"></i> Criar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Editar Card -->
+<div id="modal-editar-card" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-md" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-edit text-indigo-500 mr-2"></i>Editar Cartão
+            </h2>
+            <button onclick="document.getElementById('modal-editar-card').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="form-editar-card" onsubmit="return submitEditCard(event)" class="space-y-4">
+            <input type="hidden" id="edit-card-id" value="">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título *</label>
+                <input type="text" id="edit-card-titulo" required
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                              bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                              focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Descrição</label>
+                <textarea id="edit-card-descricao" rows="2"
+                          class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                 bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+            <div class="flex space-x-4">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Prioridade</label>
+                    <select id="edit-card-prioridade"
+                            class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                   bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                   focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="baixa">Baixa</option>
+                        <option value="media">Média</option>
+                        <option value="alta">Alta</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Data</label>
+                    <input type="date" id="edit-card-data"
+                           class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                                  focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-editar-card').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-save mr-1"></i> Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Nova Coluna -->
+<div id="modal-nova-coluna" class="fixed inset-0 z-50 hidden bg-black/50 flex items-center justify-center p-4"
+     onclick="if(event.target===this)this.classList.add('hidden')">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 w-full max-w-sm" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-columns text-indigo-500 mr-2"></i>Nova Coluna
+            </h2>
+            <button onclick="document.getElementById('modal-nova-coluna').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="form-nova-coluna" onsubmit="return submitNewColumn(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Título da Coluna *</label>
+                <input type="text" id="coluna-titulo" required
+                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
+                              bg-white dark:bg-gray-700 text-gray-900 dark:text-white
+                              focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                       placeholder="ex: Revisão, Aguardando">
+            </div>
+            <div class="flex justify-end space-x-3 pt-2">
+                <button type="button" onclick="document.getElementById('modal-nova-coluna').classList.add('hidden')"
+                        class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                    Cancelar
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors">
+                    <i class="fas fa-check mr-1"></i> Adicionar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const BOARD_NAME = '{{ quadro.nome }}';
+
+    // ─── Sortable.js Drag & Drop ──────────────────────────────────────
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar Sortable em cada coluna
+        document.querySelectorAll('.kanban-cards').forEach(function(el) {
+            new Sortable(el, {
+                group: 'kanban',
+                animation: 200,
+                ghostClass: 'kanban-card-ghost',
+                dragClass: 'kanban-card-dragging',
+                handle: '.kanban-card',
+                onEnd: function(evt) {
+                    const cardId = evt.item.dataset.cardId;
+                    const targetColumn = evt.to.closest('.kanban-column');
+                    const columnId = targetColumn.dataset.columnId;
+                    const newIndex = Array.from(evt.to.children).indexOf(evt.item);
+
+                    // Atualizar contadores
+                    updateCardCounts();
+
+                    // Enviar para o backend
+                    fetch(`/api/quadro/${BOARD_NAME}/card/${cardId}/mover`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            column_id: columnId,
+                            new_index: newIndex
+                        })
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.success) {
+                            console.error('Erro ao mover cartão');
+                            location.reload();
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        location.reload();
+                    });
+                }
+            });
+        });
+
+        // Reordenar colunas (Sortable entre colunas)
+        new Sortable(document.getElementById('kanban-columns'), {
+            animation: 200,
+            handle: '.kanban-column',
+            direction: 'horizontal',
+            onEnd: function() {
+                // Atualizar ordem das colunas no backend (futuro)
+                console.log('Colunas reordenadas');
+            }
+        });
+    });
+
+    // ─── Atualizar contadores de cards ────────────────────────────────
+
+    function updateCardCounts() {
+        document.querySelectorAll('.kanban-column').forEach(function(col) {
+            const cards = col.querySelector('.kanban-cards');
+            const countEl = col.querySelector('.card-count');
+            if (cards && countEl) {
+                countEl.textContent = cards.children.length;
+            }
+        });
+    }
+
+    // ─── CRUD de Cards ────────────────────────────────────────────────
+
+    function openNewCard(columnId) {
+        document.getElementById('card-column-id').value = columnId;
+        document.getElementById('card-titulo').value = '';
+        document.getElementById('card-descricao').value = '';
+        document.getElementById('card-prioridade').value = 'media';
+        document.getElementById('card-data').value = '';
+        document.getElementById('modal-novo-card').classList.remove('hidden');
+        document.getElementById('card-titulo').focus();
+    }
+
+    function submitNewCard(event) {
+        event.preventDefault();
+
+        const data = {
+            column_id: document.getElementById('card-column-id').value,
+            titulo: document.getElementById('card-titulo').value,
+            descricao: document.getElementById('card-descricao').value,
+            prioridade: document.getElementById('card-prioridade').value,
+            data_entrega: document.getElementById('card-data').value,
+        };
+
+        fetch(`/api/quadro/${BOARD_NAME}/card`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                document.getElementById('modal-novo-card').classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Erro ao criar cartão');
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão');
+            console.error(err);
+        });
+
+        return false;
+    }
+
+    function editCard(cardId) {
+        const card = document.querySelector(`.kanban-card[data-card-id="${cardId}"]`);
+        if (!card) return;
+
+        document.getElementById('edit-card-id').value = cardId;
+        document.getElementById('edit-card-titulo').value = card.dataset.cardTitulo;
+        document.getElementById('edit-card-descricao').value = card.dataset.cardDescricao;
+        document.getElementById('edit-card-prioridade').value = card.dataset.cardPrioridade;
+        document.getElementById('edit-card-data').value = card.dataset.cardData;
+        document.getElementById('modal-editar-card').classList.remove('hidden');
+        document.getElementById('edit-card-titulo').focus();
+    }
+
+    function submitEditCard(event) {
+        event.preventDefault();
+
+        const cardId = document.getElementById('edit-card-id').value;
+        const data = {
+            titulo: document.getElementById('edit-card-titulo').value,
+            descricao: document.getElementById('edit-card-descricao').value,
+            prioridade: document.getElementById('edit-card-prioridade').value,
+            data_entrega: document.getElementById('edit-card-data').value,
+        };
+
+        fetch(`/api/quadro/${BOARD_NAME}/card/${cardId}`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                document.getElementById('modal-editar-card').classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Erro ao salvar cartão');
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão');
+            console.error(err);
+        });
+
+        return false;
+    }
+
+    function deleteCard(cardId) {
+        if (!confirm('Excluir este cartão?')) return;
+
+        fetch(`/api/quadro/${BOARD_NAME}/card/${cardId}`, {
+            method: 'DELETE',
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Erro ao excluir cartão');
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão');
+            console.error(err);
+        });
+    }
+
+    // ─── CRUD de Colunas ──────────────────────────────────────────────
+
+    function submitNewColumn(event) {
+        event.preventDefault();
+
+        const titulo = document.getElementById('coluna-titulo').value;
+
+        fetch(`/api/quadro/${BOARD_NAME}/coluna`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title: titulo})
+        })
+        .then(r => r.json())
+        .then(result => {
+            if (result.success) {
+                document.getElementById('modal-nova-coluna').classList.add('hidden');
+                location.reload();
+            } else {
+                alert('Erro ao criar coluna');
+            }
+        })
+        .catch(err => {
+            alert('Erro de conexão');
+            console.error(err);
+        });
+
+        return false;
+    }
+
+    function confirmDeleteColumn(columnId, columnTitle) {
+        if (confirm(`Excluir a coluna "${columnTitle}"? Todos os cartões desta coluna serão perdidos.`)) {
+            fetch(`/api/quadro/${BOARD_NAME}/coluna/${columnId}`, {
+                method: 'DELETE',
+            })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success) {
+                    location.reload();
+                } else {
+                    alert('Erro ao excluir coluna');
+                }
+            })
+            .catch(err => {
+                alert('Erro de conexão');
+                console.error(err);
+            });
+        }
+    }
+</script>
+{% endblock %}
