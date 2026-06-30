@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ _('kanban_app') }}{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -55,18 +55,13 @@
 
                 <div class="flex items-center space-x-3">
                     <!-- Language Switcher -->
-                    <div class="relative" x-data="{ langOpen: false }">
-                        <!-- Backdrop removido do DOM quando fechado -->
-                        <template x-if="langOpen">
-                            <div @click="langOpen = false" class="fixed inset-0 z-40"></div>
-                        </template>
-                        <button @click="langOpen = !langOpen"
-                                class="relative z-50 p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    <div class="relative" id="lang-switcher">
+                        <button onclick="toggleDropdown('lang')"
+                                class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                 title="{{ _('nav_idioma') }}">
                             <i class="fas fa-globe text-lg"></i>
                         </button>
-                        <div x-show="langOpen" @click="langOpen = false" x-cloak
-                             class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <div id="lang-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             {% for code, name in LANGUAGES.items() %}
                             <a href="{{ url_for('set_language', code=code) }}"
                                class="block px-4 py-2 text-sm {% if lang == code %}font-bold text-indigo-600 dark:text-indigo-400{% else %}text-gray-700 dark:text-gray-200{% endif %} hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -84,13 +79,9 @@
 
                     {% if current_user_id is not none %}
                     <!-- Menu do Usuário -->
-                    <div class="relative" x-data="{ userOpen: false }">
-                        <!-- Backdrop removido do DOM quando fechado -->
-                        <template x-if="userOpen">
-                            <div @click="userOpen = false" class="fixed inset-0 z-40"></div>
-                        </template>
-                        <button @click="userOpen = !userOpen"
-                                class="relative z-50 flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                    <div class="relative" id="user-menu">
+                        <button onclick="toggleDropdown('user')"
+                                class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold">
                                 {{ (current_user.nome or 'U')[:2]|upper }}
                             </div>
@@ -99,8 +90,7 @@
                             </span>
                             <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                         </button>
-                        <div x-show="userOpen" @click="userOpen = false" x-cloak
-                             class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                        <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                                 <p class="text-sm font-medium text-gray-900 dark:text-white">{{ current_user.nome if current_user else '' }}</p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_user.email if current_user else '' }}</p>
@@ -210,6 +200,29 @@
                 }
             }
         }
+
+        // Dropdown toggle com vanilla JS
+        function toggleDropdown(name) {
+            var dropdown = document.getElementById(name + '-dropdown');
+            var isOpen = !dropdown.classList.contains('hidden');
+            closeAllDropdowns();
+            if (!isOpen) {
+                dropdown.classList.remove('hidden');
+            }
+        }
+
+        function closeAllDropdowns() {
+            document.querySelectorAll('[id$="-dropdown"]').forEach(function(el) {
+                el.classList.add('hidden');
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            var nav = document.querySelector('nav');
+            if (nav && !nav.contains(e.target)) {
+                closeAllDropdowns();
+            }
+        });
     </script>
     {% block scripts %}{% endblock %}
 </body>
