@@ -55,13 +55,13 @@
 
                 <div class="flex items-center space-x-3">
                     <!-- Language Switcher -->
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open"
+                    <div class="relative">
+                        <button @click.stop="toggleLang()"
                                 class="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                                 title="{{ _('nav_idioma') }}">
                             <i class="fas fa-globe text-lg"></i>
                         </button>
-                        <div x-show="open" x-cloak
+                        <div x-show="langOpen" x-cloak
                              class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             {% for code, name in LANGUAGES.items() %}
                             <a href="{{ url_for('set_language', code=code) }}"
@@ -80,8 +80,8 @@
 
                     {% if current_user_id is not none %}
                     <!-- Menu do Usuário -->
-                    <div class="relative" x-data="{ open: false }" @click.outside="open = false">
-                        <button @click="open = !open"
+                    <div class="relative">
+                        <button @click.stop="toggleUser()"
                                 class="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             <div class="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-sm font-bold">
                                 {{ (current_user.nome or 'U')[:2]|upper }}
@@ -91,7 +91,7 @@
                             </span>
                             <i class="fas fa-chevron-down text-xs text-gray-400"></i>
                         </button>
-                        <div x-show="open" x-cloak
+                        <div x-show="userOpen" x-cloak
                              class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                             <div class="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
                                 <p class="text-sm font-medium text-gray-900 dark:text-white">{{ current_user.nome if current_user else '' }}</p>
@@ -190,6 +190,20 @@
         function appTheme() {
             return {
                 isDark: localStorage.getItem('kanban-theme') === 'dark',
+                langOpen: false,
+                userOpen: false,
+                toggleLang() {
+                    this.langOpen = !this.langOpen;
+                    this.userOpen = false;
+                },
+                toggleUser() {
+                    this.userOpen = !this.userOpen;
+                    this.langOpen = false;
+                },
+                closeDropdowns() {
+                    this.langOpen = false;
+                    this.userOpen = false;
+                },
                 toggleTheme() {
                     this.isDark = !this.isDark;
                     localStorage.setItem('kanban-theme', this.isDark ? 'dark' : 'light');
@@ -199,6 +213,14 @@
                     if (this.isDark) {
                         document.documentElement.setAttribute('data-theme', 'dark');
                     }
+                    // Fecha dropdowns ao clicar fora
+                    document.addEventListener('click', (e) => {
+                        const nav = document.querySelector('nav');
+                        if (nav && !nav.contains(e.target)) {
+                            this.langOpen = false;
+                            this.userOpen = false;
+                        }
+                    });
                 }
             }
         }
